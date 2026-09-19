@@ -9,6 +9,7 @@ export type PaymentProvider =
 export interface Installment {
   date: string;
   value: number | null;
+  paid: boolean;
 }
 
 export interface Client {

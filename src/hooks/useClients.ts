@@ -51,6 +51,7 @@ function normalize(data: DocumentData, id: string): Client {
       ? data.paymentInstallments.map((i: DocumentData) => ({
           date: String(i?.date ?? ''),
           value: typeof i?.value === 'number' ? i.value : null,
+          paid: Boolean(i?.paid),
         }))
       : [],
     scopeItems: Array.isArray(data.scopeItems) ? data.scopeItems.map(String) : [],

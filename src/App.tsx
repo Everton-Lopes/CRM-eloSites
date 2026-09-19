@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { useAuth } from './hooks/useAuth';
 import { useClients } from './hooks/useClients';
 import { useSyncStatus } from './hooks/useSyncStatus';
@@ -12,9 +12,15 @@ import { Pipeline } from './components/Pipeline';
 import { ClientFormModal } from './components/ClientFormModal';
 import { ClientDetailModal } from './components/ClientDetailModal';
 import { Login } from './components/Login';
+import { computeAlerts, useAlertSound } from './components/Alerts';
 
-export default function App() {
-  const { user, loading: authLoading, login, logout } = useAuth();
+function CrmApp({
+  email,
+  onLogout,
+}: {
+  email: string | null;
+  onLogout: () => void;
+}) {
   const [tab, setTab] = useState<TabId>('dashboard');
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Client | null>(null);
@@ -28,9 +34,12 @@ export default function App() {
     addClient,
     updateClient,
     removeClient,
-  } = useClients(Boolean(user));
+  } = useClients(true);
 
   const sync = useSyncStatus(pendingWrites, fromCache);
+
+  const alerts = useMemo(() => computeAlerts(clients), [clients]);
+  const { soundOn, toggleSound } = useAlertSound(alerts.length);
 
   async function handleSave(input: ClientInput) {
     if (editing) {
@@ -58,25 +67,15 @@ export default function App() {
     }
   }
 
-  if (authLoading) {
-    return (
-      <div className="flex min-h-screen items-center justify-center text-[13px] text-muted">
-        Carregando…
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Login onLogin={login} />;
-  }
-
   return (
     <div className="mx-auto max-w-[1180px] px-4 pb-20 pt-5">
       <Header
         syncKind={sync.kind}
         syncLabel={sync.label}
-        email={user.email}
-        onLogout={logout}
+        email={email}
+        onLogout={onLogout}
+        soundOn={soundOn}
+        onToggleSound={toggleSound}
       />
       <Tabs current={tab} onChange={setTab} />
 
@@ -86,7 +85,16 @@ export default function App() {
         </div>
       )}
 
-      {tab === 'dashboard' && <Dashboard clients={clients} />}
+      {tab === 'dashboard' && (
+        <Dashboard
+          clients={clients}
+          alerts={alerts}
+          onAlertClient={(client) => {
+            setEditing(client);
+            setFormOpen(true);
+          }}
+        />
+      )}
       {tab === 'clientes' && (
         <Clientes
           clients={clients}
@@ -128,4 +136,25 @@ export default function App() {
       )}
     </div>
   );
+}
+
+export default function App() {
+  const { user, loading: authLoading, login, logout } = useAuth();
+
+  if (authLoading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-[13px] text-muted">
+        Carregando…
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Login onLogin={login} />;
+  }
+
+  // Keyed by uid so a fresh login remounts the whole authenticated UI.
+  // This resets the session-only sound toggle to muted and clears any
+  // alert-sound interval on logout/unmount.
+  return <CrmApp key={user.uid} email={user.email} onLogout={logout} />;
 }

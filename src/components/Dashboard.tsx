@@ -1,9 +1,18 @@
 import { fmtBRL } from '../lib/format';
 import { exportSpreadsheet } from '../lib/export';
 import type { Client } from '../types';
+import { Alerts, type ClientAlert } from './Alerts';
 import { Button, EmptyState, Kpi, SectionTitle, StageBadge } from './ui';
 
-export function Dashboard({ clients }: { clients: Client[] }) {
+export function Dashboard({
+  clients,
+  alerts,
+  onAlertClient,
+}: {
+  clients: Client[];
+  alerts: ClientAlert[];
+  onAlertClient: (client: Client) => void;
+}) {
   const totalClientes = clients.length;
   const ativos = clients.filter(
     (c) => c.pipelineStage !== 'entregue' || c.maintenance,
@@ -27,6 +36,8 @@ export function Dashboard({ clients }: { clients: Client[] }) {
 
   return (
     <div>
+      <Alerts alerts={alerts} onSelectClient={onAlertClient} />
+
       <div className="mb-[22px] grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3">
         <Kpi
           label="Clientes"

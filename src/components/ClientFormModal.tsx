@@ -129,7 +129,10 @@ export function ClientFormModal({
   function addInstallment() {
     setForm((f) => ({
       ...f,
-      paymentInstallments: [...f.paymentInstallments, { date: '', value: null }],
+      paymentInstallments: [
+        ...f.paymentInstallments,
+        { date: '', value: null, paid: false },
+      ],
     }));
   }
 
@@ -462,6 +465,16 @@ export function ClientFormModal({
                             })
                           }
                         />
+                        <label className="flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap text-[12px] text-text">
+                          <input
+                            type="checkbox"
+                            checked={inst.paid}
+                            onChange={(e) =>
+                              updateInstallment(idx, { paid: e.target.checked })
+                            }
+                          />
+                          Pago
+                        </label>
                         <Button
                           variant="danger"
                           size="sm"
