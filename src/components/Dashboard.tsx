@@ -55,11 +55,6 @@ export function Dashboard({
           sub="saldo de projetos em aberto"
         />
         <Kpi
-          label="Manutenção/mês"
-          value={fmtBRL(receitaManutencao)}
-          sub={`${manutencoesAtivas} contrato(s) ativo(s)`}
-        />
-        <Kpi
           label="Receita recorrente mensal"
           value={fmtBRL(receitaManutencao)}
           sub={`${manutencoesAtivas} clientes em manutenção`}
