@@ -1,0 +1,33 @@
+Rebuild this single-file HTML CRM (attached: elosites-crm-source.html) as a proper React + TypeScript + Vite + Tailwind project — same stack as my other ēloSites projects. This is a "turbo" version: real offline-first sync + automatic document generation. Keep the visual style (dark theme, same color tokens) and the four tabs (Dashboard, Clientes, Financeiro, Pipeline) with the same fields and behavior as the reference file.
+
+1) DATA LAYER — Firebase Firestore with offline persistence
+Replace the current data logic with Firebase (firebase/app + firebase/firestore + firebase/auth), npm installed. Read the Firebase config from environment variables (VITE_FIREBASE_API_KEY, VITE_FIREBASE_AUTH_DOMAIN, VITE_FIREBASE_PROJECT_ID, VITE_FIREBASE_STORAGE_BUCKET, VITE_FIREBASE_MESSAGING_SENDER_ID, VITE_FIREBASE_APP_ID) via a .env.example file — do not invent real values, leave placeholders for me to fill in.
+Enable Firestore offline persistence (enableIndexedDbPersistence or the modern persistentLocalCache API). When offline: all reads/writes work normally against the local cache. When connection returns: Firestore syncs automatically in the background — no custom sync code needed, that's the built-in behavior.
+Add a small status indicator (top right, same spot as today) showing: "Online — sincronizado" / "Offline — salvando localmente" / "Sincronizando…", based on Firestore's connection state.
+Add simple authentication: a login screen (e-mail + senha) using Firebase Auth, single user (me). No public sign-up flow. If not authenticated, show only the login screen.
+Data model: one Firestore collection "clients", same fields as today (name, cnpjCpf, segment, whatsapp, email, projectType, pipelineStage, domain, hosting, repo, contractDate, deliveryDate, budget, deposit, paymentMethod, paymentStatus, maintenance, maintenanceValue, notes). Add these NEW fields needed for document generation: deliveryUrl (string), maintenanceStartDate (string), paymentInstallments (array of {date, value} — supports 2+ custom installments instead of a fixed 50/50), scopeItems (array of strings — which catalog items are included, see section 3), cnpjCpfType ('CPF'|'CNPJ').
+
+2) DOCUMENT GENERATION — fill and download real .docx files per client
+Use docxtemplater + pizzip (both npm packages) to fill .docx templates with client data and trigger a browser download. I'm attaching my 7 existing Word templates in this same zip (folder /templates) — convert each one's blank fields (the [___] placeholders) into docxtemplater tags like {clientName}, {cpfCnpj}, {address}, {projectType}, {budget}, {paymentInstallmentsList}, {maintenanceValue}, {maintenanceStartDate}, {deliveryUrl}, {today}, etc. — matching the client fields in section 1. Store the templates as .docx files in /public/templates/. Do NOT rewrite the legal/contractual wording of these templates — only insert merge tags where blank fields currently exist.
+
+In each client's detail view, add a "Gerar documentos" panel with one button per document, each producing a ready-to-download .docx filled with that client's data:
+- Briefing (only company/contact fields pre-filled, rest stays blank for the client to answer)
+- Orçamento
+- Contrato Padrão
+- Termo de Entrega
+- Termo de Transferência de Infraestrutura
+- Termo de Manutenção Mensal
+(Skip "Checklist de Entrega" and "Referência Comercial Interna" here — those are internal-only, not sent to clients, so leave them out of this per-client generator. They're included in this zip only as reference material for you to understand the full business process.)
+
+Each generated file should download with a clear name, e.g. "Contrato_[NomeCliente].docx".
+
+3) SCOPE CATALOG — reusable per project type
+Hardcode two catalogs as constants (Landing Page and Site Institucional), same items as in the attached Orçamento template (/templates/ēloSites_Orcamento_Modelo.docx) and Referência Comercial Interna (/reference/ēloSites_Referencia_Comercial_Interna.docx). In the client form, when "Tipo de projeto" is selected, show the matching catalog as checkboxes; selections save into scopeItems and feed directly into the generated Orçamento's itemized table.
+
+4) SPREADSHEET EXPORT
+Use the "xlsx" npm package (SheetJS) to add a "Baixar planilha" button on the Dashboard, exporting all clients into an .xlsx file with 3 sheets — Clientes, Financeiro (with the same computed "restante" column), Pipeline — mirroring the structure of the attached reference spreadsheet /reference/ēloSites_Controle_Clientes_Financeiro.xlsx.
+
+5) SECURITY
+Never commit real Firebase config values or any secret to the repository. After I create the Firebase project, I'll add Firestore security rules restricting all read/write to my authenticated user only — remind me of this in a short comment in the README, but don't write the rules file with guessed values.
+
+After implementing, run npm run build and fix any TypeScript/build errors before delivering the zip.

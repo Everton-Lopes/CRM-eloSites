@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>ēloSites CRM</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0B0F19; --bg2:#0E1420; --card:#111826; --border:rgba(255,255,255,0.08);
+    --text:#E5E9F0; --muted:#8B95A7; --indigo:#6366F1; --indigo2:#818CF8;
+    --green:#34D399; --amber:#FBBF24; --red:#F87171; --radius:14px;
+  }
+  @media (prefers-color-scheme: light){
+    :root:not([data-theme="dark"]){
+      --bg:#F3F4F8; --bg2:#FFFFFF; --card:#FFFFFF; --border:rgba(15,23,42,0.09);
+      --text:#0F172A; --muted:#5B6472;
+    }
+  }
+  :root[data-theme="dark"]{
+    --bg:#0B0F19; --bg2:#0E1420; --card:#111826; --border:rgba(255,255,255,0.08); --text:#E5E9F0; --muted:#8B95A7;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg); color:var(--text); font-family:'Inter',system-ui,-apple-system,sans-serif;
+    min-height:100vh; -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:1180px;margin:0 auto;padding:20px 16px 80px;}
+  header.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:20px;flex-wrap:wrap;}
+  .brand{display:flex;align-items:center;gap:10px;}
+  .brand .dot{width:10px;height:10px;border-radius:50%;background:linear-gradient(135deg,var(--indigo),var(--indigo2));}
+  .brand h1{font-size:18px;font-weight:800;margin:0;letter-spacing:-0.01em;}
+  .brand span{color:var(--muted);font-size:12px;}
+  .status-pill{font-size:11px;padding:4px 10px;border-radius:999px;border:1px solid var(--border);color:var(--muted);}
+  .status-pill.ok{color:var(--green);border-color:rgba(52,211,153,0.3);}
+  .status-pill.warn{color:var(--amber);border-color:rgba(251,191,36,0.3);}
+
+  nav.tabs{display:flex;gap:6px;overflow-x:auto;margin-bottom:20px;border-bottom:1px solid var(--border);padding-bottom:0;}
+  nav.tabs button{
+    background:none;border:none;color:var(--muted);font-family:inherit;font-size:13px;font-weight:600;
+    padding:10px 14px;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;
+  }
+  nav.tabs button.active{color:var(--text);border-color:var(--indigo);}
+
+  .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:22px;}
+  .kpi{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;}
+  .kpi .label{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:0.04em;font-weight:600;}
+  .kpi .value{font-size:22px;font-weight:800;margin-top:6px;letter-spacing:-0.02em;}
+  .kpi .sub{font-size:11px;color:var(--muted);margin-top:2px;}
+
+  .section-title{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;gap:10px;flex-wrap:wrap;}
+  .section-title h2{font-size:15px;font-weight:700;margin:0;}
+  .btn{
+    background:var(--indigo);color:white;border:none;border-radius:10px;padding:9px 14px;font-size:13px;
+    font-weight:600;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;gap:6px;
+  }
+  .btn:hover{background:var(--indigo2);}
+  .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--text);}
+  .btn.danger{background:transparent;border:1px solid rgba(248,113,113,0.4);color:var(--red);}
+  .btn.small{padding:6px 10px;font-size:12px;}
+
+  .card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:12px;}
+  .empty{color:var(--muted);font-size:13px;padding:30px 10px;text-align:center;}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th{text-align:left;color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:0.03em;padding:8px 10px;border-bottom:1px solid var(--border);}
+  td{padding:10px;border-bottom:1px solid var(--border);vertical-align:top;}
+  tr:last-child td{border-bottom:none;}
+  .table-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:var(--radius);background:var(--card);}
+  .table-wrap table{min-width:760px;}
+
+  .badge{font-size:11px;padding:3px 8px;border-radius:999px;border:1px solid var(--border);white-space:nowrap;display:inline-block;}
+  .badge.stage-lead{color:var(--muted);}
+  .badge.stage-proposta{color:#93C5FD;border-color:rgba(147,197,253,0.3);}
+  .badge.stage-contrato{color:var(--indigo2);border-color:rgba(129,140,248,0.35);}
+  .badge.stage-pagamento{color:var(--amber);border-color:rgba(251,191,36,0.3);}
+  .badge.stage-desenvolvimento{color:var(--indigo2);border-color:rgba(129,140,248,0.35);}
+  .badge.stage-aprovacao{color:var(--amber);border-color:rgba(251,191,36,0.3);}
+  .badge.stage-publicacao{color:#67E8F9;border-color:rgba(103,232,249,0.3);}
+  .badge.stage-entregue{color:var(--green);border-color:rgba(52,211,153,0.3);}
+  .badge.stage-manutencao{color:var(--green);border-color:rgba(52,211,153,0.3);}
+
+  .kanban{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;}
+  .kcol{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:10px;min-height:80px;}
+  .kcol h3{font-size:11px;text-transform:uppercase;letter-spacing:0.03em;color:var(--muted);margin:2px 4px 10px;}
+  .kcard{background:var(--bg2);border:1px solid var(--border);border-radius:10px;padding:10px;margin-bottom:8px;font-size:12.5px;}
+  .kcard .name{font-weight:700;margin-bottom:4px;}
+  .kcard select{width:100%;margin-top:6px;background:var(--card);color:var(--text);border:1px solid var(--border);border-radius:8px;padding:5px;font-size:11.5px;font-family:inherit;}
+
+  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.6);display:flex;align-items:center;justify-content:center;padding:16px;z-index:50;}
+  .modal{background:var(--bg2);border:1px solid var(--border);border-radius:16px;max-width:560px;width:100%;max-height:88vh;overflow-y:auto;padding:20px;}
+  .modal h3{margin:0 0 14px;font-size:16px;}
+  .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .form-grid .full{grid-column:1/-1;}
+  label{font-size:11px;color:var(--muted);font-weight:600;display:block;margin-bottom:4px;}
+  input,select,textarea{
+    width:100%;background:var(--card);border:1px solid var(--border);color:var(--text);border-radius:8px;
+    padding:8px 10px;font-size:13px;font-family:inherit;
+  }
+  textarea{resize:vertical;min-height:56px;}
+  .field{margin-bottom:10px;}
+  .modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px;}
+  .row-actions{display:flex;gap:6px;}
+  .muted{color:var(--muted);}
+  .disclaimer{font-size:11px;color:var(--muted);margin-top:26px;text-align:center;line-height:1.5;}
+  a{color:var(--indigo2);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div class="brand">
+      <div class="dot"></div>
+      <div>
+        <h1>ēloSites CRM</h1>
+        <span>Clientes · financeiro · pipeline</span>
+      </div>
+    </div>
+    <div id="conn-status" class="status-pill">verificando conexão…</div>
+  </header>
+
+  <nav class="tabs">
+    <button data-tab="dashboard" class="active">Dashboard</button>
+    <button data-tab="clientes">Clientes</button>
+    <button data-tab="financeiro">Financeiro</button>
+    <button data-tab="pipeline">Pipeline</button>
+  </nav>
+
+  <div id="tab-dashboard"></div>
+  <div id="tab-clientes" style="display:none;"></div>
+  <div id="tab-financeiro" style="display:none;"></div>
+  <div id="tab-pipeline" style="display:none;"></div>
+
+  <p class="disclaimer">Dados salvos de forma privada nesta organização (capability <code>db</code> do Claude). Nada é enviado para o site público do ēloSites.</p>
+</div>
+
+<div id="modal-root"></div>
+
+<script>
+const STAGES = [
+  { id: 'lead', label: 'Lead' },
+  { id: 'proposta', label: 'Proposta' },
+  { id: 'contrato', label: 'Contrato' },
+  { id: 'pagamento', label: 'Pagamento (entrada)' },
+  { id: 'desenvolvimento', label: 'Desenvolvimento' },
+  { id: 'aprovacao', label: 'Aprovação' },
+  { id: 'publicacao', label: 'Publicação' },
+  { id: 'entregue', label: 'Entregue' },
+  { id: 'manutencao', label: 'Manutenção' },
+];
+
+function fmtBRL(n){
+  const v = Number(n);
+  if (!isFinite(v)) return '—';
+  return v.toLocaleString('pt-BR', { style:'currency', currency:'BRL' });
+}
+function esc(s){
+  return (s ?? '').toString().replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+let db = null;
+let clientsCol = null;
+let clients = [];
+let currentTab = 'dashboard';
+let unsub = null;
+
+async function init(){
+  const statusEl = document.getElementById('conn-status');
+  try {
+    db = await claude.use('db');
+  } catch(e) { db = null; }
+
+  if (!db) {
+    statusEl.textContent = 'sem conexão de dados';
+    statusEl.classList.add('warn');
+    render();
+    return;
+  }
+  statusEl.textContent = 'conectado';
+  statusEl.classList.add('ok');
+
+  clientsCol = db.collection('clients');
+  unsub = clientsCol.orderBy('name').onSnapshot(
+    (snap) => {
+      clients = snap.docs.map(d => ({ id: d.id, ...(d.data() || {}) }));
+      render();
+    },
+    (err) => {
+      statusEl.textContent = 'erro ao sincronizar';
+      statusEl.classList.remove('ok');
+      statusEl.classList.add('warn');
+      console.error(err);
+    }
+  );
+}
+
+document.querySelectorAll('nav.tabs button').forEach(btn => {
+  btn.addEventListener('click', () => {
+    currentTab = btn.dataset.tab;
+    document.querySelectorAll('nav.tabs button').forEach(b => b.classList.toggle('active', b === btn));
+    render();
+  });
+});
+
+function render(){
+  ['dashboard','clientes','financeiro','pipeline'].forEach(t => {
+    document.getElementById('tab-' + t).style.display = (t === currentTab) ? '' : 'none';
+  });
+  if (currentTab === 'dashboard') renderDashboard();
+  if (currentTab === 'clientes') renderClientes();
+  if (currentTab === 'financeiro') renderFinanceiro();
+  if (currentTab === 'pipeline') renderPipeline();
+}
+
+function renderDashboard(){
+  const el = document.getElementById('tab-dashboard');
+  const totalClientes = clients.length;
+  const ativos = clients.filter(c => c.pipelineStage !== 'entregue' || c.maintenance).length;
+  const aReceber = clients.reduce((sum, c) => {
+    const budget = Number(c.budget) || 0;
+    const deposit = Number(c.deposit) || 0;
+    return sum + Math.max(budget - deposit, 0);
+  }, 0);
+  const receitaFechada = clients.reduce((sum, c) => sum + (Number(c.deposit) || 0), 0);
+  const manutencoesAtivas = clients.filter(c => c.maintenance).length;
+  const receitaManutencao = clients.reduce((sum, c) => c.maintenance ? sum + (Number(c.maintenanceValue) || 0) : sum, 0);
+
+  el.innerHTML = `
+    <div class="kpis">
+      <div class="kpi"><div class="label">Clientes</div><div class="value">${totalClientes}</div><div class="sub">${ativos} em andamento/ativos</div></div>
+      <div class="kpi"><div class="label">Recebido</div><div class="value">${fmtBRL(receitaFechada)}</div><div class="sub">entradas + finais registrados</div></div>
+      <div class="kpi"><div class="label">A receber</div><div class="value">${fmtBRL(aReceber)}</div><div class="sub">saldo de projetos em aberto</div></div>
+      <div class="kpi"><div class="label">Manutenção/mês</div><div class="value">${fmtBRL(receitaManutencao)}</div><div class="sub">${manutencoesAtivas} contrato(s) ativo(s)</div></div>
+    </div>
+    <div class="section-title"><h2>Clientes recentes</h2></div>
+    ${clients.length === 0 ? emptyState() : `
+      <div class="table-wrap"><table>
+        <thead><tr><th>Cliente</th><th>Projeto</th><th>Etapa</th><th>Status pagamento</th></tr></thead>
+        <tbody>
+          ${clients.slice(0,6).map(c => `
+            <tr>
+              <td><strong>${esc(c.name)}</strong><div class="muted">${esc(c.segment||'')}</div></td>
+              <td>${esc(c.projectType||'—')}</td>
+              <td><span class="badge stage-${esc(c.pipelineStage||'lead')}">${stageLabel(c.pipelineStage)}</span></td>
+              <td>${esc(c.paymentStatus||'—')}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table></div>
+    `}
+  `;
+}
+
+function stageLabel(id){
+  const s = STAGES.find(s => s.id === id);
+  return s ? s.label : 'Lead';
+}
+
+function emptyState(){
+  return `<div class="card empty">Nenhum cliente cadastrado ainda. Use a aba <strong>Clientes</strong> para adicionar o primeiro.</div>`;
+}
+
+function renderClientes(){
+  const el = document.getElementById('tab-clientes');
+  el.innerHTML = `
+    <div class="section-title">
+      <h2>Clientes (${clients.length})</h2>
+      <button class="btn" id="btn-new-client">+ Novo cliente</button>
+    </div>
+    ${clients.length === 0 ? emptyState() : `
+      <div class="table-wrap"><table>
+        <thead><tr><th>Cliente</th><th>Contato</th><th>Projeto</th><th>Domínio/Repo</th><th>Etapa</th><th></th></tr></thead>
+        <tbody>
+          ${clients.map(c => `
+            <tr>
+              <td><strong>${esc(c.name)}</strong><div class="muted">${esc(c.segment||'')}</div></td>
+              <td>${esc(c.whatsapp||'—')}<div class="muted">${esc(c.email||'')}</div></td>
+              <td>${esc(c.projectType||'—')}</td>
+              <td>${esc(c.domain||'—')}<div class="muted">${esc(c.repo||'')}</div></td>
+              <td><span class="badge stage-${esc(c.pipelineStage||'lead')}">${stageLabel(c.pipelineStage)}</span></td>
+              <td class="row-actions">
+                <button class="btn ghost small" data-edit="${c.id}">Editar</button>
+                <button class="btn danger small" data-del="${c.id}">Excluir</button>
+              </td>
+            </tr>`).join('')}
+        </tbody>
+      </table></div>
+    `}
+  `;
+  document.getElementById('btn-new-client').addEventListener('click', () => openClientModal(null));
+  el.querySelectorAll('[data-edit]').forEach(b => b.addEventListener('click', () => openClientModal(b.dataset.edit)));
+  el.querySelectorAll('[data-del]').forEach(b => b.addEventListener('click', () => deleteClient(b.dataset.del)));
+}
+
+function renderFinanceiro(){
+  const el = document.getElementById('tab-financeiro');
+  const totalBudget = clients.reduce((s,c)=> s + (Number(c.budget)||0), 0);
+  const totalDeposit = clients.reduce((s,c)=> s + (Number(c.deposit)||0), 0);
+  el.innerHTML = `
+    <div class="kpis">
+      <div class="kpi"><div class="label">Total orçado</div><div class="value">${fmtBRL(totalBudget)}</div></div>
+      <div class="kpi"><div class="label">Total recebido</div><div class="value">${fmtBRL(totalDeposit)}</div></div>
+      <div class="kpi"><div class="label">Saldo a receber</div><div class="value">${fmtBRL(totalBudget-totalDeposit)}</div></div>
+    </div>
+    <div class="section-title"><h2>Detalhamento por cliente</h2></div>
+    ${clients.length === 0 ? emptyState() : `
+      <div class="table-wrap"><table>
+        <thead><tr><th>Cliente</th><th>Orçado</th><th>Recebido</th><th>Restante</th><th>Manutenção/mês</th><th>Pagamento</th><th>Status</th></tr></thead>
+        <tbody>
+          ${clients.map(c => {
+            const budget = Number(c.budget)||0, deposit = Number(c.deposit)||0;
+            return `<tr>
+              <td><strong>${esc(c.name)}</strong></td>
+              <td>${c.budget != null ? fmtBRL(budget) : '—'}</td>
+              <td>${c.deposit != null ? fmtBRL(deposit) : '—'}</td>
+              <td>${(c.budget!=null) ? fmtBRL(Math.max(budget-deposit,0)) : '—'}</td>
+              <td>${c.maintenance ? fmtBRL(Number(c.maintenanceValue)||0) : '—'}</td>
+              <td>${esc(c.paymentMethod||'—')}</td>
+              <td>${esc(c.paymentStatus||'—')}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table></div>
+    `}
+  `;
+}
+
+function renderPipeline(){
+  const el = document.getElementById('tab-pipeline');
+  el.innerHTML = `
+    <div class="section-title"><h2>Pipeline</h2></div>
+    <div class="kanban">
+      ${STAGES.map(stage => {
+        const inStage = clients.filter(c => (c.pipelineStage || 'lead') === stage.id);
+        return `
+          <div class="kcol">
+            <h3>${stage.label} (${inStage.length})</h3>
+            ${inStage.map(c => `
+              <div class="kcard">
+                <div class="name">${esc(c.name)}</div>
+                <div class="muted">${esc(c.projectType||'')}</div>
+                <select data-stage-client="${c.id}">
+                  ${STAGES.map(s => `<option value="${s.id}" ${s.id===stage.id?'selected':''}>${s.label}</option>`).join('')}
+                </select>
+              </div>
+            `).join('')}
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+  el.querySelectorAll('[data-stage-client]').forEach(sel => {
+    sel.addEventListener('change', async () => {
+      const id = sel.dataset.stageClient;
+      try { await clientsCol.doc(id).update({ pipelineStage: sel.value }); }
+      catch(e){ console.error(e); }
+    });
+  });
+}
+
+function fieldsTemplate(c={}){
+  return `
+    <div class="form-grid">
+      <div class="field full"><label>Nome / empresa *</label><input name="name" value="${esc(c.name)}" required /></div>
+      <div class="field"><label>CPF/CNPJ</label><input name="cnpjCpf" value="${esc(c.cnpjCpf)}" /></div>
+      <div class="field"><label>Segmento</label><input name="segment" value="${esc(c.segment)}" /></div>
+      <div class="field"><label>WhatsApp</label><input name="whatsapp" value="${esc(c.whatsapp)}" /></div>
+      <div class="field"><label>E-mail</label><input name="email" value="${esc(c.email)}" /></div>
+      <div class="field"><label>Tipo de projeto</label>
+        <select name="projectType">
+          ${['Landing page','Site institucional','Outro'].map(o=>`<option ${c.projectType===o?'selected':''}>${o}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field"><label>Etapa (pipeline)</label>
+        <select name="pipelineStage">
+          ${STAGES.map(s=>`<option value="${s.id}" ${(c.pipelineStage||'lead')===s.id?'selected':''}>${s.label}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field"><label>Domínio</label><input name="domain" value="${esc(c.domain)}" /></div>
+      <div class="field"><label>Hospedagem</label><input name="hosting" value="${esc(c.hosting)}" placeholder="Netlify" /></div>
+      <div class="field full"><label>Repositório GitHub</label><input name="repo" value="${esc(c.repo)}" /></div>
+      <div class="field"><label>Data contratação</label><input type="date" name="contractDate" value="${esc(c.contractDate)}" /></div>
+      <div class="field"><label>Data prevista entrega</label><input type="date" name="deliveryDate" value="${esc(c.deliveryDate)}" /></div>
+      <div class="field"><label>Valor orçado (R$)</label><input type="number" step="0.01" name="budget" value="${c.budget ?? ''}" /></div>
+      <div class="field"><label>Entrada recebida (R$)</label><input type="number" step="0.01" name="deposit" value="${c.deposit ?? ''}" /></div>
+      <div class="field"><label>Forma de pagamento</label><input name="paymentMethod" value="${esc(c.paymentMethod)}" placeholder="Pix, cartão…" /></div>
+      <div class="field"><label>Status pagamento</label><input name="paymentStatus" value="${esc(c.paymentStatus)}" placeholder="Em andamento, pago…" /></div>
+      <div class="field"><label>Manutenção contratada?</label>
+        <select name="maintenance"><option value="false" ${!c.maintenance?'selected':''}>Não</option><option value="true" ${c.maintenance?'selected':''}>Sim</option></select>
+      </div>
+      <div class="field"><label>Valor manutenção (R$/mês)</label><input type="number" step="0.01" name="maintenanceValue" value="${c.maintenanceValue ?? ''}" /></div>
+      <div class="field full"><label>Observações</label><textarea name="notes">${esc(c.notes)}</textarea></div>
+    </div>
+  `;
+}
+
+function openClientModal(id){
+  const c = id ? (clients.find(x=>x.id===id) || {}) : {};
+  const root = document.getElementById('modal-root');
+  root.innerHTML = `
+    <div class="modal-overlay" id="overlay">
+      <div class="modal">
+        <h3>${id ? 'Editar cliente' : 'Novo cliente'}</h3>
+        <form id="client-form">${fieldsTemplate(c)}</form>
+        <div class="modal-actions">
+          <button class="btn ghost" id="cancel-modal" type="button">Cancelar</button>
+          <button class="btn" id="save-modal" type="button">Salvar</button>
+        </div>
+      </div>
+    </div>
+  `;
+  document.getElementById('overlay').addEventListener('click', (e) => { if (e.target.id === 'overlay') closeModal(); });
+  document.getElementById('cancel-modal').addEventListener('click', closeModal);
+  document.getElementById('save-modal').addEventListener('click', () => saveClient(id));
+}
+function closeModal(){ document.getElementById('modal-root').innerHTML = ''; }
+
+async function saveClient(id){
+  const form = document.getElementById('client-form');
+  const fd = new FormData(form);
+  const name = (fd.get('name') || '').toString().trim();
+  if (!name) { alert('Nome é obrigatório.'); return; }
+
+  const data = {
+    name,
+    cnpjCpf: fd.get('cnpjCpf') || '',
+    segment: fd.get('segment') || '',
+    whatsapp: fd.get('whatsapp') || '',
+    email: fd.get('email') || '',
+    projectType: fd.get('projectType') || '',
+    pipelineStage: fd.get('pipelineStage') || 'lead',
+    domain: fd.get('domain') || '',
+    hosting: fd.get('hosting') || '',
+    repo: fd.get('repo') || '',
+    contractDate: fd.get('contractDate') || '',
+    deliveryDate: fd.get('deliveryDate') || '',
+    budget: fd.get('budget') ? Number(fd.get('budget')) : null,
+    deposit: fd.get('deposit') ? Number(fd.get('deposit')) : null,
+    paymentMethod: fd.get('paymentMethod') || '',
+    paymentStatus: fd.get('paymentStatus') || '',
+    maintenance: fd.get('maintenance') === 'true',
+    maintenanceValue: fd.get('maintenanceValue') ? Number(fd.get('maintenanceValue')) : null,
+    notes: fd.get('notes') || '',
+    updatedAt: Date.now(),
+  };
+
+  if (!db) { alert('Sem conexão com o banco de dados neste momento.'); return; }
+
+  try {
+    if (id) {
+      await clientsCol.doc(id).update(data);
+    } else {
+      data.createdAt = Date.now();
+      await clientsCol.add(data);
+    }
+    closeModal();
+  } catch (e) {
+    console.error(e);
+    alert('Não foi possível salvar agora. Tente novamente.');
+  }
+}
+
+async function deleteClient(id){
+  if (!confirm('Excluir este cliente? Essa ação não pode ser desfeita.')) return;
+  try { await clientsCol.doc(id).delete(); }
+  catch(e){ console.error(e); alert('Não foi possível excluir agora.'); }
+}
+
+init();
+</script>
+</body>
+</html>
