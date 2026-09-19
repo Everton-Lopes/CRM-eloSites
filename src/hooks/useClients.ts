@@ -55,6 +55,13 @@ function normalize(data: DocumentData, id: string): Client {
         }))
       : [],
     scopeItems: Array.isArray(data.scopeItems) ? data.scopeItems.map(String) : [],
+    documentLogs: Array.isArray(data.documentLogs)
+      ? data.documentLogs.map((d: DocumentData) => ({
+          templateId: String(d?.templateId ?? ''),
+          templateLabel: String(d?.templateLabel ?? ''),
+          generatedAt: typeof d?.generatedAt === 'number' ? d.generatedAt : 0,
+        }))
+      : [],
     createdAt: typeof data.createdAt === 'number' ? data.createdAt : undefined,
     updatedAt: typeof data.updatedAt === 'number' ? data.updatedAt : undefined,
   };

@@ -1,7 +1,9 @@
 import Docxtemplater from 'docxtemplater';
 import PizZip from 'pizzip';
+import { arrayUnion, doc, updateDoc } from 'firebase/firestore';
+import { CLIENTS_COLLECTION, db } from '../firebase';
 import { DOCUMENT_TEMPLATES, LANDING_CATALOG, SITE_CATALOG } from '../constants';
-import type { Client, Installment } from '../types';
+import type { Client, DocumentLogEntry, Installment } from '../types';
 import { valorPorExtenso } from './extenso';
 import { flag, parseDateParts, todayParts } from './format';
 
@@ -143,19 +145,27 @@ export async function generateDocument(templateId: string, client: Client): Prom
   }
   const arrayBuffer = await response.arrayBuffer();
   const zip = new PizZip(arrayBuffer);
-  const doc = new Docxtemplater(zip, {
+  const docx = new Docxtemplater(zip, {
     paragraphLoop: true,
     linebreaks: true,
     nullGetter: () => '',
   });
 
-  doc.render(buildContext(client));
+  docx.render(buildContext(client));
 
-  const out = doc.getZip().generate({
+  const out = docx.getZip().generate({
     type: 'blob',
     mimeType:
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   }) as Blob;
 
   download(out, `${template.prefix}_${safeFileName(client.name)}.docx`);
+
+  await updateDoc(doc(db, CLIENTS_COLLECTION, client.id), {
+    documentLogs: arrayUnion({
+      templateId,
+      templateLabel: template.label,
+      generatedAt: Date.now(),
+    } satisfies DocumentLogEntry),
+  }).catch((err: unknown) => console.error(err));
 }

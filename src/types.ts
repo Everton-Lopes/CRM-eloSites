@@ -12,6 +12,12 @@ export interface Installment {
   paid: boolean;
 }
 
+export interface DocumentLogEntry {
+  templateId: string;
+  templateLabel: string;
+  generatedAt: number;
+}
+
 export interface Client {
   id: string;
   name: string;
@@ -43,11 +49,15 @@ export interface Client {
   maintenanceStartDate: string;
   paymentInstallments: Installment[];
   scopeItems: string[];
+  documentLogs: DocumentLogEntry[];
   createdAt?: number;
   updatedAt?: number;
 }
 
-export type ClientInput = Omit<Client, 'id' | 'createdAt' | 'updatedAt'>;
+export type ClientInput = Omit<
+  Client,
+  'id' | 'createdAt' | 'updatedAt' | 'documentLogs'
+>;
 
 export interface SyncState {
   online: boolean;

@@ -5,6 +5,15 @@ import { fmtBRL, stageLabel } from '../lib/format';
 import type { Client } from '../types';
 import { Button, StageBadge } from './ui';
 
+function fmtLogDate(ts: number): string {
+  if (!ts) return '—';
+  const d = new Date(ts);
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear()} ${pad(
+    d.getHours(),
+  )}:${pad(d.getMinutes())}`;
+}
+
 export function ClientDetailModal({
   client,
   onClose,
@@ -103,6 +112,22 @@ export function ClientDetailModal({
             </Button>
           ))}
         </div>
+
+        {client.documentLogs.length > 0 && (
+          <div className="mt-4 border-t border-edge pt-3">
+            <h4 className="m-0 text-[13px] font-bold">Documentos gerados</h4>
+            <ul className="mt-2 flex list-none flex-col gap-1 p-0 text-xs text-muted">
+              {[...client.documentLogs]
+                .sort((a, b) => b.generatedAt - a.generatedAt)
+                .map((log, idx) => (
+                  <li key={`${log.templateId}-${log.generatedAt}-${idx}`}>
+                    <strong className="text-text">{log.templateLabel}</strong> gerado em{' '}
+                    {fmtLogDate(log.generatedAt)}
+                  </li>
+                ))}
+            </ul>
+          </div>
+        )}
 
         {error && (
           <div className="mt-3 rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-xs text-danger">

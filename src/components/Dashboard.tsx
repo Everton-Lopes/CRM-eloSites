@@ -1,5 +1,5 @@
 import { fmtBRL } from '../lib/format';
-import { exportSpreadsheet } from '../lib/export';
+import { exportBackupJSON, exportSpreadsheet } from '../lib/export';
 import type { Client } from '../types';
 import { Alerts, type ClientAlert } from './Alerts';
 import { Button, EmptyState, Kpi, SectionTitle, StageBadge } from './ui';
@@ -59,14 +59,34 @@ export function Dashboard({
           value={fmtBRL(receitaManutencao)}
           sub={`${manutencoesAtivas} contrato(s) ativo(s)`}
         />
+        <Kpi
+          label="Receita recorrente mensal"
+          value={fmtBRL(receitaManutencao)}
+          sub={`${manutencoesAtivas} clientes em manutenção`}
+        />
       </div>
 
       <SectionTitle
         title="Clientes recentes"
         action={
-          <Button variant="ghost" size="sm" onClick={() => exportSpreadsheet(clients)}>
-            Baixar planilha
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                void exportSpreadsheet(clients).catch((err) => console.error(err));
+              }}
+            >
+              Baixar planilha
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => exportBackupJSON(clients)}
+            >
+              Baixar backup (.json)
+            </Button>
+          </div>
         }
       />
 

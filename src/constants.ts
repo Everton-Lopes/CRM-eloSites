@@ -74,6 +74,12 @@ export const DOCUMENT_TEMPLATES: DocumentTemplate[] = [
     prefix: 'Termo_de_Transferencia',
   },
   {
+    id: 'manual',
+    label: 'Manual de Instruções Básicas',
+    file: 'manual-instrucoes.docx',
+    prefix: 'Manual_de_Instrucoes',
+  },
+  {
     id: 'manutencao',
     label: 'Termo de Manutenção Mensal',
     file: 'termo-manutencao.docx',

@@ -24,7 +24,7 @@ function CrmApp({
   const [tab, setTab] = useState<TabId>('dashboard');
   const [formOpen, setFormOpen] = useState(false);
   const [editing, setEditing] = useState<Client | null>(null);
-  const [detail, setDetail] = useState<Client | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
 
   const {
     clients,
@@ -35,6 +35,10 @@ function CrmApp({
     updateClient,
     removeClient,
   } = useClients(true);
+
+  const detailClient = detailId
+    ? clients.find((c) => c.id === detailId) ?? null
+    : null;
 
   const sync = useSyncStatus(pendingWrites, fromCache);
 
@@ -107,7 +111,7 @@ function CrmApp({
             setFormOpen(true);
           }}
           onDelete={handleDelete}
-          onOpen={setDetail}
+          onOpen={(client) => setDetailId(client.id)}
         />
       )}
       {tab === 'financeiro' && <Financeiro clients={clients} />}
@@ -131,8 +135,8 @@ function CrmApp({
         />
       )}
 
-      {detail && (
-        <ClientDetailModal client={detail} onClose={() => setDetail(null)} />
+      {detailClient && (
+        <ClientDetailModal client={detailClient} onClose={() => setDetailId(null)} />
       )}
     </div>
   );
