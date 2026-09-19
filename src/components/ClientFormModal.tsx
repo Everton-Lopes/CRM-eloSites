@@ -1,6 +1,12 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
-import { PROJECT_TYPES, STAGES, catalogFor } from '../constants';
-import type { Client, ClientInput, CnpjCpfType, Installment } from '../types';
+import { PROJECT_TYPES, PAYMENT_PROVIDERS, STAGES, catalogFor } from '../constants';
+import type {
+  Client,
+  ClientInput,
+  CnpjCpfType,
+  Installment,
+  PaymentProvider,
+} from '../types';
 import { Button } from './ui';
 
 const inputClass =
@@ -27,6 +33,9 @@ function emptyInput(): ClientInput {
     deposit: null,
     paymentMethod: '',
     paymentStatus: '',
+    paymentProvider: 'Pix direto',
+    feesAmount: null,
+    proofReference: '',
     maintenance: false,
     maintenanceValue: null,
     notes: '',
@@ -57,6 +66,9 @@ function fromClient(client: Client): ClientInput {
     deposit: client.deposit,
     paymentMethod: client.paymentMethod,
     paymentStatus: client.paymentStatus,
+    paymentProvider: client.paymentProvider,
+    feesAmount: client.feesAmount,
+    proofReference: client.proofReference,
     maintenance: client.maintenance,
     maintenanceValue: client.maintenanceValue,
     notes: client.notes,
@@ -331,6 +343,49 @@ export function ClientFormModal({
                 placeholder="Em andamento, pago…"
                 value={form.paymentStatus}
                 onChange={(e) => set('paymentStatus', e.target.value)}
+              />
+            </Field>
+
+            <div className="sm:col-span-2">
+              <div className="border-b border-edge pb-1 text-[11px] font-bold uppercase tracking-[0.04em] text-brand-light">
+                Pagamento
+              </div>
+            </div>
+
+            <Field label="Processador de pagamento">
+              <select
+                className={inputClass}
+                value={form.paymentProvider}
+                onChange={(e) => set('paymentProvider', e.target.value as PaymentProvider)}
+              >
+                {PAYMENT_PROVIDERS.map((p) => (
+                  <option key={p} value={p}>
+                    {p}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Taxas descontadas (R$)">
+              <input
+                type="number"
+                step="0.01"
+                className={inputClass}
+                placeholder="0,00"
+                value={form.feesAmount ?? ''}
+                onChange={(e) =>
+                  set(
+                    'feesAmount',
+                    e.target.value === '' ? null : Number(e.target.value),
+                  )
+                }
+              />
+            </Field>
+            <Field label="Comprovante / referência da transação" full>
+              <input
+                className={inputClass}
+                placeholder="Link do comprovante no Drive ou ID da transação"
+                value={form.proofReference}
+                onChange={(e) => set('proofReference', e.target.value)}
               />
             </Field>
 

@@ -1,3 +1,5 @@
+import type { PaymentProvider } from './types';
+
 export interface Stage {
   id: string;
   label: string;
@@ -13,6 +15,13 @@ export const STAGES: Stage[] = [
   { id: 'publicacao', label: 'Publicação' },
   { id: 'entregue', label: 'Entregue' },
   { id: 'manutencao', label: 'Manutenção' },
+];
+
+export const PAYMENT_PROVIDERS: PaymentProvider[] = [
+  'Pix direto',
+  'InfinitePay',
+  'Mercado Pago',
+  'Outro',
 ];
 
 export const PROJECT_TYPES = ['Landing page', 'Site institucional', 'Outro'] as const;

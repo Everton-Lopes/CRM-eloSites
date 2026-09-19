@@ -10,7 +10,8 @@ import {
   type DocumentData,
 } from 'firebase/firestore';
 import { CLIENTS_COLLECTION, db } from '../firebase';
-import type { Client, ClientInput } from '../types';
+import { PAYMENT_PROVIDERS } from '../constants';
+import type { Client, ClientInput, PaymentProvider } from '../types';
 
 function normalize(data: DocumentData, id: string): Client {
   return {
@@ -33,6 +34,13 @@ function normalize(data: DocumentData, id: string): Client {
     deposit: typeof data.deposit === 'number' ? data.deposit : null,
     paymentMethod: String(data.paymentMethod ?? ''),
     paymentStatus: String(data.paymentStatus ?? ''),
+    paymentProvider: PAYMENT_PROVIDERS.includes(
+      String(data.paymentProvider ?? '') as PaymentProvider,
+    )
+      ? (data.paymentProvider as PaymentProvider)
+      : 'Pix direto',
+    feesAmount: typeof data.feesAmount === 'number' ? data.feesAmount : null,
+    proofReference: String(data.proofReference ?? ''),
     maintenance: Boolean(data.maintenance),
     maintenanceValue:
       typeof data.maintenanceValue === 'number' ? data.maintenanceValue : null,

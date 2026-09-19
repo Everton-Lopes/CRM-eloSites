@@ -29,15 +29,19 @@ export function exportSpreadsheet(clients: Client[]): void {
   const clientesSheet = XLSX.utils.json_to_sheet(clientesRows);
   XLSX.utils.book_append_sheet(workbook, clientesSheet, 'Clientes');
 
-  const financeiroRows = clients.map((c) => {
+  const financeiroRows: Record<string, string | number>[] = clients.map((c) => {
     const budget = c.budget ?? 0;
     const deposit = c.deposit ?? 0;
+    const net = c.budget === null ? null : c.budget - (c.feesAmount ?? 0);
     return {
       Cliente: c.name,
       Projeto: c.projectType,
       'Valor orçado (R$)': num(c.budget),
       'Entrada recebida (R$)': num(c.deposit),
       'Restante a receber (R$)': c.budget === null ? '' : Math.max(budget - deposit, 0),
+      'Valor líquido (R$)': net === null ? '' : net,
+      'Processador': c.paymentProvider,
+      'Taxas (R$)': num(c.feesAmount),
       'Manutenção mensal (R$)': c.maintenance ? num(c.maintenanceValue) : '',
       'Forma de pagamento': c.paymentMethod,
       Status: c.paymentStatus,
@@ -45,12 +49,16 @@ export function exportSpreadsheet(clients: Client[]): void {
   });
   const totalBudget = clients.reduce((s, c) => s + (c.budget ?? 0), 0);
   const totalDeposit = clients.reduce((s, c) => s + (c.deposit ?? 0), 0);
+  const totalFees = clients.reduce((s, c) => s + (c.feesAmount ?? 0), 0);
   financeiroRows.push({
     Cliente: 'TOTAL',
     Projeto: '',
     'Valor orçado (R$)': totalBudget,
     'Entrada recebida (R$)': totalDeposit,
     'Restante a receber (R$)': Math.max(totalBudget - totalDeposit, 0),
+    'Valor líquido (R$)': totalBudget - totalFees,
+    'Processador': '',
+    'Taxas (R$)': totalFees,
     'Manutenção mensal (R$)': '',
     'Forma de pagamento': '',
     Status: '',

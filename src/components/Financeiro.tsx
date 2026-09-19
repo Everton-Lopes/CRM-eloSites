@@ -34,7 +34,9 @@ export function Financeiro({ clients }: { clients: Client[] }) {
                 <th className={th}>Orçado</th>
                 <th className={th}>Recebido</th>
                 <th className={th}>Restante</th>
+                <th className={th}>Valor líquido</th>
                 <th className={th}>Manutenção/mês</th>
+                <th className={th}>Processador</th>
                 <th className={th}>Pagamento</th>
                 <th className={th}>Status</th>
               </tr>
@@ -43,6 +45,8 @@ export function Financeiro({ clients }: { clients: Client[] }) {
               {clients.map((c) => {
                 const budget = Number(c.budget) || 0;
                 const deposit = Number(c.deposit) || 0;
+                const net =
+                  c.budget == null ? null : c.budget - (c.feesAmount ?? 0);
                 return (
                   <tr key={c.id}>
                     <td className={td}>
@@ -55,9 +59,11 @@ export function Financeiro({ clients }: { clients: Client[] }) {
                     <td className={td}>
                       {c.budget != null ? fmtBRL(Math.max(budget - deposit, 0)) : '—'}
                     </td>
+                    <td className={td}>{net != null ? fmtBRL(net) : '—'}</td>
                     <td className={td}>
                       {c.maintenance ? fmtBRL(Number(c.maintenanceValue) || 0) : '—'}
                     </td>
+                    <td className={td}>{c.paymentProvider || '—'}</td>
                     <td className={td}>{c.paymentMethod || '—'}</td>
                     <td className={td}>{c.paymentStatus || '—'}</td>
                   </tr>

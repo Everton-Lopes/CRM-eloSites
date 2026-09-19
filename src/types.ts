@@ -1,5 +1,11 @@
 export type CnpjCpfType = 'CPF' | 'CNPJ';
 
+export type PaymentProvider =
+  | 'Pix direto'
+  | 'InfinitePay'
+  | 'Mercado Pago'
+  | 'Outro';
+
 export interface Installment {
   date: string;
   value: number | null;
@@ -25,6 +31,9 @@ export interface Client {
   deposit: number | null;
   paymentMethod: string;
   paymentStatus: string;
+  paymentProvider: PaymentProvider;
+  feesAmount: number | null;
+  proofReference: string;
   maintenance: boolean;
   maintenanceValue: number | null;
   notes: string;
