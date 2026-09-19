@@ -1,0 +1,480 @@
+import { useState, type FormEvent, type ReactNode } from 'react';
+import { PROJECT_TYPES, STAGES, catalogFor } from '../constants';
+import type { Client, ClientInput, CnpjCpfType, Installment } from '../types';
+import { Button } from './ui';
+
+const inputClass =
+  'w-full rounded-lg border border-edge bg-card px-2.5 py-2 text-[13px] text-text outline-none focus:border-brand';
+const labelClass = 'mb-1 block text-[11px] font-semibold text-muted';
+
+function emptyInput(): ClientInput {
+  return {
+    name: '',
+    cnpjCpf: '',
+    cnpjCpfType: 'CPF',
+    segment: '',
+    whatsapp: '',
+    email: '',
+    address: '',
+    projectType: PROJECT_TYPES[0],
+    pipelineStage: 'lead',
+    domain: '',
+    hosting: '',
+    repo: '',
+    contractDate: '',
+    deliveryDate: '',
+    budget: null,
+    deposit: null,
+    paymentMethod: '',
+    paymentStatus: '',
+    maintenance: false,
+    maintenanceValue: null,
+    notes: '',
+    deliveryUrl: '',
+    maintenanceStartDate: '',
+    paymentInstallments: [],
+    scopeItems: [],
+  };
+}
+
+function fromClient(client: Client): ClientInput {
+  return {
+    name: client.name,
+    cnpjCpf: client.cnpjCpf,
+    cnpjCpfType: client.cnpjCpfType,
+    segment: client.segment,
+    whatsapp: client.whatsapp,
+    email: client.email,
+    address: client.address,
+    projectType: client.projectType,
+    pipelineStage: client.pipelineStage,
+    domain: client.domain,
+    hosting: client.hosting,
+    repo: client.repo,
+    contractDate: client.contractDate,
+    deliveryDate: client.deliveryDate,
+    budget: client.budget,
+    deposit: client.deposit,
+    paymentMethod: client.paymentMethod,
+    paymentStatus: client.paymentStatus,
+    maintenance: client.maintenance,
+    maintenanceValue: client.maintenanceValue,
+    notes: client.notes,
+    deliveryUrl: client.deliveryUrl,
+    maintenanceStartDate: client.maintenanceStartDate,
+    paymentInstallments: client.paymentInstallments.map((i) => ({ ...i })),
+    scopeItems: [...client.scopeItems],
+  };
+}
+
+function Field({
+  label,
+  children,
+  full,
+}: {
+  label: string;
+  children: ReactNode;
+  full?: boolean;
+}) {
+  return (
+    <div className={full ? 'sm:col-span-2' : ''}>
+      <label className={labelClass}>{label}</label>
+      {children}
+    </div>
+  );
+}
+
+export function ClientFormModal({
+  client,
+  onClose,
+  onSave,
+}: {
+  client: Client | null;
+  onClose: () => void;
+  onSave: (input: ClientInput) => Promise<void> | void;
+}) {
+  const [form, setForm] = useState<ClientInput>(() =>
+    client ? fromClient(client) : emptyInput(),
+  );
+  const [error, setError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const catalog = catalogFor(form.projectType);
+
+  function set<K extends keyof ClientInput>(key: K, value: ClientInput[K]) {
+    setForm((f) => ({ ...f, [key]: value }));
+  }
+
+  function toggleScope(item: string) {
+    setForm((f) => ({
+      ...f,
+      scopeItems: f.scopeItems.includes(item)
+        ? f.scopeItems.filter((x) => x !== item)
+        : [...f.scopeItems, item],
+    }));
+  }
+
+  function addInstallment() {
+    setForm((f) => ({
+      ...f,
+      paymentInstallments: [...f.paymentInstallments, { date: '', value: null }],
+    }));
+  }
+
+  function updateInstallment(index: number, patch: Partial<Installment>) {
+    setForm((f) => ({
+      ...f,
+      paymentInstallments: f.paymentInstallments.map((it, i) =>
+        i === index ? { ...it, ...patch } : it,
+      ),
+    }));
+  }
+
+  function removeInstallment(index: number) {
+    setForm((f) => ({
+      ...f,
+      paymentInstallments: f.paymentInstallments.filter((_, i) => i !== index),
+    }));
+  }
+
+  async function handleSubmit(e: FormEvent) {
+    e.preventDefault();
+    const name = form.name.trim();
+    if (!name) {
+      setError('Nome é obrigatório.');
+      return;
+    }
+    setError(null);
+    setBusy(true);
+    try {
+      await onSave({ ...form, name });
+      onClose();
+    } catch (err) {
+      console.error(err);
+      setError('Não foi possível salvar agora. Tente novamente.');
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="max-h-[88vh] w-full max-w-[560px] overflow-y-auto rounded-2xl border border-edge bg-bg2 p-5">
+        <h3 className="mb-3.5 text-base font-bold">
+          {client ? 'Editar cliente' : 'Novo cliente'}
+        </h3>
+        <form onSubmit={handleSubmit}>
+          <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+            <Field label="Nome / empresa *" full>
+              <input
+                className={inputClass}
+                required
+                value={form.name}
+                onChange={(e) => set('name', e.target.value)}
+              />
+            </Field>
+
+            <Field label={form.cnpjCpfType === 'CNPJ' ? 'CNPJ' : 'CPF'}>
+              <input
+                className={inputClass}
+                value={form.cnpjCpf}
+                onChange={(e) => set('cnpjCpf', e.target.value)}
+              />
+            </Field>
+            <Field label="Tipo de documento">
+              <select
+                className={inputClass}
+                value={form.cnpjCpfType}
+                onChange={(e) => set('cnpjCpfType', e.target.value as CnpjCpfType)}
+              >
+                <option value="CPF">CPF</option>
+                <option value="CNPJ">CNPJ</option>
+              </select>
+            </Field>
+
+            <Field label="Segmento">
+              <input
+                className={inputClass}
+                value={form.segment}
+                onChange={(e) => set('segment', e.target.value)}
+              />
+            </Field>
+            <Field label="WhatsApp">
+              <input
+                className={inputClass}
+                value={form.whatsapp}
+                onChange={(e) => set('whatsapp', e.target.value)}
+              />
+            </Field>
+
+            <Field label="E-mail">
+              <input
+                className={inputClass}
+                value={form.email}
+                onChange={(e) => set('email', e.target.value)}
+              />
+            </Field>
+            <Field label="Endereço">
+              <input
+                className={inputClass}
+                value={form.address}
+                onChange={(e) => set('address', e.target.value)}
+              />
+            </Field>
+
+            <Field label="Tipo de projeto">
+              <select
+                className={inputClass}
+                value={form.projectType}
+                onChange={(e) => set('projectType', e.target.value)}
+              >
+                {PROJECT_TYPES.map((o) => (
+                  <option key={o} value={o}>
+                    {o}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <Field label="Etapa (pipeline)">
+              <select
+                className={inputClass}
+                value={form.pipelineStage}
+                onChange={(e) => set('pipelineStage', e.target.value)}
+              >
+                {STAGES.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {s.label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+
+            <Field label="Domínio">
+              <input
+                className={inputClass}
+                value={form.domain}
+                onChange={(e) => set('domain', e.target.value)}
+              />
+            </Field>
+            <Field label="Hospedagem">
+              <input
+                className={inputClass}
+                placeholder="Netlify"
+                value={form.hosting}
+                onChange={(e) => set('hosting', e.target.value)}
+              />
+            </Field>
+
+            <Field label="Repositório GitHub" full>
+              <input
+                className={inputClass}
+                value={form.repo}
+                onChange={(e) => set('repo', e.target.value)}
+              />
+            </Field>
+
+            <Field label="Data contratação">
+              <input
+                type="date"
+                className={inputClass}
+                value={form.contractDate}
+                onChange={(e) => set('contractDate', e.target.value)}
+              />
+            </Field>
+            <Field label="Data prevista entrega">
+              <input
+                type="date"
+                className={inputClass}
+                value={form.deliveryDate}
+                onChange={(e) => set('deliveryDate', e.target.value)}
+              />
+            </Field>
+
+            <Field label="Valor orçado (R$)">
+              <input
+                type="number"
+                step="0.01"
+                className={inputClass}
+                value={form.budget ?? ''}
+                onChange={(e) =>
+                  set('budget', e.target.value === '' ? null : Number(e.target.value))
+                }
+              />
+            </Field>
+            <Field label="Entrada recebida (R$)">
+              <input
+                type="number"
+                step="0.01"
+                className={inputClass}
+                value={form.deposit ?? ''}
+                onChange={(e) =>
+                  set('deposit', e.target.value === '' ? null : Number(e.target.value))
+                }
+              />
+            </Field>
+
+            <Field label="Forma de pagamento">
+              <input
+                className={inputClass}
+                placeholder="Pix, cartão…"
+                value={form.paymentMethod}
+                onChange={(e) => set('paymentMethod', e.target.value)}
+              />
+            </Field>
+            <Field label="Status pagamento">
+              <input
+                className={inputClass}
+                placeholder="Em andamento, pago…"
+                value={form.paymentStatus}
+                onChange={(e) => set('paymentStatus', e.target.value)}
+              />
+            </Field>
+
+            <Field label="Manutenção contratada?">
+              <select
+                className={inputClass}
+                value={form.maintenance ? 'true' : 'false'}
+                onChange={(e) => set('maintenance', e.target.value === 'true')}
+              >
+                <option value="false">Não</option>
+                <option value="true">Sim</option>
+              </select>
+            </Field>
+            <Field label="Valor manutenção (R$/mês)">
+              <input
+                type="number"
+                step="0.01"
+                className={inputClass}
+                value={form.maintenanceValue ?? ''}
+                onChange={(e) =>
+                  set(
+                    'maintenanceValue',
+                    e.target.value === '' ? null : Number(e.target.value),
+                  )
+                }
+              />
+            </Field>
+
+            <Field label="Início da manutenção">
+              <input
+                type="date"
+                className={inputClass}
+                value={form.maintenanceStartDate}
+                onChange={(e) => set('maintenanceStartDate', e.target.value)}
+              />
+            </Field>
+            <Field label="URL de entrega (site publicado)">
+              <input
+                className={inputClass}
+                placeholder="https://…"
+                value={form.deliveryUrl}
+                onChange={(e) => set('deliveryUrl', e.target.value)}
+              />
+            </Field>
+
+            <Field label="Parcelas de pagamento" full>
+              <div className="rounded-[10px] border border-edge bg-card p-3">
+                {form.paymentInstallments.length === 0 ? (
+                  <p className="mb-2 text-xs text-muted">
+                    Nenhuma parcela definida. Adicione quantas precisar (data e valor).
+                  </p>
+                ) : (
+                  <div className="mb-2 flex flex-col gap-2">
+                    {form.paymentInstallments.map((inst, idx) => (
+                      <div key={idx} className="flex items-center gap-2">
+                        <input
+                          type="date"
+                          className={inputClass}
+                          value={inst.date}
+                          onChange={(e) =>
+                            updateInstallment(idx, { date: e.target.value })
+                          }
+                        />
+                        <input
+                          type="number"
+                          step="0.01"
+                          placeholder="Valor (R$)"
+                          className={inputClass}
+                          value={inst.value ?? ''}
+                          onChange={(e) =>
+                            updateInstallment(idx, {
+                              value:
+                                e.target.value === '' ? null : Number(e.target.value),
+                            })
+                          }
+                        />
+                        <Button
+                          variant="danger"
+                          size="sm"
+                          onClick={() => removeInstallment(idx)}
+                        >
+                          Remover
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                <Button variant="ghost" size="sm" onClick={addInstallment}>
+                  + Adicionar parcela
+                </Button>
+              </div>
+            </Field>
+
+            <Field label="Escopo incluído (catálogo do tipo de projeto)" full>
+              {catalog.length === 0 ? (
+                <p className="rounded-[10px] border border-edge bg-card px-3 py-2 text-xs text-muted">
+                  Nenhum catálogo padrão para este tipo de projeto. Use as observações
+                  para descrever o escopo.
+                </p>
+              ) : (
+                <div className="flex flex-col gap-1.5 rounded-[10px] border border-edge bg-card p-3">
+                  {catalog.map((item) => (
+                    <label
+                      key={item}
+                      className="flex cursor-pointer items-start gap-2 text-[12.5px] text-text"
+                    >
+                      <input
+                        type="checkbox"
+                        className="mt-0.5"
+                        checked={form.scopeItems.includes(item)}
+                        onChange={() => toggleScope(item)}
+                      />
+                      <span>{item}</span>
+                    </label>
+                  ))}
+                </div>
+              )}
+            </Field>
+
+            <Field label="Observações" full>
+              <textarea
+                className={`${inputClass} min-h-[56px] resize-y`}
+                value={form.notes}
+                onChange={(e) => set('notes', e.target.value)}
+              />
+            </Field>
+          </div>
+
+          {error && (
+            <div className="mt-3 rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-xs text-danger">
+              {error}
+            </div>
+          )}
+
+          <div className="mt-4 flex justify-end gap-2">
+            <Button variant="ghost" onClick={onClose} disabled={busy}>
+              Cancelar
+            </Button>
+            <Button type="submit" disabled={busy}>
+              {busy ? 'Salvando…' : 'Salvar'}
+            </Button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
+}

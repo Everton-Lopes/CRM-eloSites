@@ -1,8 +1,8 @@
-import { STAGES } from './constants';
+import { STAGES } from '../constants';
 
 export function fmtBRL(n: number | null | undefined): string {
   const v = Number(n);
-  if (n === null || n === undefined || n === '' || !isFinite(v)) return '—';
+  if (n === null || n === undefined || !isFinite(v)) return '—';
   return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 }
 
