@@ -124,7 +124,7 @@ export function buildContext(client: Client) {
     hasInstallments: client.paymentInstallments.some(
       (i) => Boolean(i.date) || (i.value !== null && i.value !== undefined),
     ),
-    reviewRounds: '2',
+    reviewRounds: '3',
     noticeDays: '15',
     cureDays: '15',
     jurisdiction: '',
