@@ -43,8 +43,16 @@ function formatInstallments(list: Installment[]): string {
     .join('; ');
 }
 
+// Older records may still carry the previous catalog label that referenced a
+// specific hosting provider. Map it to the current neutral publication item so
+// previously selected scope is not silently dropped from generated documents.
+const LEGACY_SCOPE_LABELS: Record<string, string> = {
+  'Publicação no Netlify':
+    'Publicação e implantação do site no endereço definido com o cliente',
+};
+
 function catalogRows(catalog: string[], selected: string[], active: boolean) {
-  const chosen = new Set(selected);
+  const chosen = new Set(selected.map((item) => LEGACY_SCOPE_LABELS[item] ?? item));
   return catalog.map((label) => ({
     label,
     mark: active && chosen.has(label) ? 'X' : ' ',
@@ -113,6 +121,9 @@ export function buildContext(client: Client) {
     transferValue: '',
 
     installmentsList: formatInstallments(client.paymentInstallments),
+    hasInstallments: client.paymentInstallments.some(
+      (i) => Boolean(i.date) || (i.value !== null && i.value !== undefined),
+    ),
     reviewRounds: '2',
     noticeDays: '15',
     cureDays: '15',

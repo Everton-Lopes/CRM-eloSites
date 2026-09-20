@@ -42,7 +42,7 @@ function emptyInput(): ClientInput {
     deliveryUrl: '',
     maintenanceStartDate: '',
     paymentInstallments: [],
-    scopeItems: [],
+    scopeItems: [...catalogFor(PROJECT_TYPES[0])],
   };
 }
 
@@ -115,6 +115,16 @@ export function ClientFormModal({
 
   function set<K extends keyof ClientInput>(key: K, value: ClientInput[K]) {
     setForm((f) => ({ ...f, [key]: value }));
+  }
+
+  function changeProjectType(next: string) {
+    setForm((f) => {
+      // Existing clients keep their saved scope untouched. New clients get the
+      // complete catalog for the selected type pre-selected (Projeto
+      // Personalizado has no standard catalog, so the scope stays empty).
+      if (client) return { ...f, projectType: next };
+      return { ...f, projectType: next, scopeItems: [...catalogFor(next)] };
+    });
   }
 
   function toggleScope(item: string) {
@@ -245,7 +255,7 @@ export function ClientFormModal({
               <select
                 className={inputClass}
                 value={form.projectType}
-                onChange={(e) => set('projectType', e.target.value)}
+                onChange={(e) => changeProjectType(e.target.value)}
               >
                 {PROJECT_TYPES.map((o) => (
                   <option key={o} value={o}>

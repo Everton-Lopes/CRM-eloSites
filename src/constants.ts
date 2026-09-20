@@ -46,7 +46,8 @@ export const LANDING_CATALOG: string[] = [
   'Botão de WhatsApp com mensagem pré-preenchida em cada chamada',
   'Apresentação detalhada dos serviços ou produtos',
   'Responsiva para celular, tablet e desktop',
-  'Publicação no Netlify',
+  'Publicação e implantação do site no endereço definido com o cliente',
+  'Configuração e conexão técnica de domínio e hospedagem contratados diretamente pelo cliente, quando previstos no escopo',
 ];
 
 export const SITE_CATALOG: string[] = [
@@ -56,7 +57,8 @@ export const SITE_CATALOG: string[] = [
   'Seção de localização (endereço e/ou mapa)',
   'Botão de WhatsApp integrado ao longo da página',
   'Responsiva para celular, tablet e desktop',
-  'Publicação no Netlify',
+  'Publicação e implantação do site no endereço definido com o cliente',
+  'Configuração e conexão técnica de domínio e hospedagem contratados diretamente pelo cliente, quando previstos no escopo',
 ];
 
 export function catalogFor(projectType: string): string[] {
@@ -115,7 +117,8 @@ export const DOCUMENT_TEMPLATES: DocumentTemplate[] = [
     file: 'termo-transferencia.docx',
     prefix: 'Termo_de_Transferencia',
     kind: 'client',
-    description: 'Transferência de repositório, hospedagem e domínio ao cliente.',
+    description:
+      'Transferência de código-fonte, repositório e informações técnicas de implantação e configuração.',
   },
   {
     id: 'manual',
@@ -123,7 +126,8 @@ export const DOCUMENT_TEMPLATES: DocumentTemplate[] = [
     file: 'manual-instrucoes.docx',
     prefix: 'Manual_de_Instrucoes',
     kind: 'client',
-    description: 'Orientações ao cliente após assumir a infraestrutura do site.',
+    description:
+      'Orientações ao cliente sobre o repositório, a publicação e o domínio/hospedagem de sua titularidade.',
   },
   {
     id: 'manutencao',
