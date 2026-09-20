@@ -22,9 +22,29 @@ function InstallmentsCell({ installments }: { installments: Installment[] }) {
   );
 }
 
+function hasInstallments(client: Client): boolean {
+  return (
+    Array.isArray(client.paymentInstallments) && client.paymentInstallments.length > 0
+  );
+}
+
+// When installments are registered they are the source of truth for what has
+// actually been received (only paid ones count). Clients without installments
+// keep the legacy `deposit` value. Paid installments replace `deposit` — never
+// sum both, which would double-count the same payment.
+function receivedTotal(client: Client): number {
+  if (hasInstallments(client)) {
+    return client.paymentInstallments.reduce(
+      (sum, inst) => (inst.paid ? sum + (Number(inst.value) || 0) : sum),
+      0,
+    );
+  }
+  return Number(client.deposit) || 0;
+}
+
 export function Financeiro({ clients }: { clients: Client[] }) {
   const totalBudget = clients.reduce((s, c) => s + (Number(c.budget) || 0), 0);
-  const totalDeposit = clients.reduce((s, c) => s + (Number(c.deposit) || 0), 0);
+  const totalReceived = clients.reduce((s, c) => s + receivedTotal(c), 0);
 
   const th =
     'border-b border-edge px-2.5 py-2 text-left text-[11px] font-semibold uppercase tracking-[0.03em] text-muted';
@@ -34,8 +54,8 @@ export function Financeiro({ clients }: { clients: Client[] }) {
     <div>
       <div className="mb-[22px] grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-3">
         <Kpi label="Total orçado" value={fmtBRL(totalBudget)} />
-        <Kpi label="Total recebido" value={fmtBRL(totalDeposit)} />
-        <Kpi label="Saldo a receber" value={fmtBRL(totalBudget - totalDeposit)} />
+        <Kpi label="Total recebido" value={fmtBRL(totalReceived)} />
+        <Kpi label="Saldo a receber" value={fmtBRL(totalBudget - totalReceived)} />
       </div>
 
       <SectionTitle title="Detalhamento por cliente" />
@@ -66,6 +86,11 @@ export function Financeiro({ clients }: { clients: Client[] }) {
               {clients.map((c) => {
                 const budget = Number(c.budget) || 0;
                 const deposit = Number(c.deposit) || 0;
+                const hasInst = hasInstallments(c);
+                const received = hasInst ? receivedTotal(c) : deposit;
+                const remaining = hasInst
+                  ? budget - received
+                  : Math.max(budget - deposit, 0);
                 const net =
                   c.budget == null ? null : c.budget - (c.feesAmount ?? 0);
                 return (
@@ -75,10 +100,14 @@ export function Financeiro({ clients }: { clients: Client[] }) {
                     </td>
                     <td className={td}>{c.budget != null ? fmtBRL(budget) : '—'}</td>
                     <td className={td}>
-                      {c.deposit != null ? fmtBRL(deposit) : '—'}
+                      {hasInst
+                        ? fmtBRL(received)
+                        : c.deposit != null
+                          ? fmtBRL(received)
+                          : '—'}
                     </td>
                     <td className={td}>
-                      {c.budget != null ? fmtBRL(Math.max(budget - deposit, 0)) : '—'}
+                      {c.budget != null ? fmtBRL(remaining) : '—'}
                     </td>
                     <td className={td}>{net != null ? fmtBRL(net) : '—'}</td>
                     <td className={td}>
