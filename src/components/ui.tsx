@@ -63,7 +63,9 @@ export function Kpi({
       <div className="text-[11px] font-semibold uppercase tracking-[0.04em] text-muted">
         {label}
       </div>
-      <div className="mt-1.5 text-[22px] font-extrabold tracking-tight">{value}</div>
+      <div className="mt-1.5 break-words text-[22px] font-extrabold tracking-tight">
+        {value}
+      </div>
       {sub && <div className="mt-0.5 text-[11px] text-muted">{sub}</div>}
     </Card>
   );

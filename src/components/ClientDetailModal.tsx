@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { DOCUMENT_TEMPLATES } from '../constants';
 import { generateDocument } from '../lib/documents';
-import { fmtBRL, stageLabel } from '../lib/format';
+import { fmtBRL, parseDateParts, stageLabel } from '../lib/format';
 import type { Client } from '../types';
 import { Button, StageBadge } from './ui';
 
@@ -23,12 +23,27 @@ export function ClientDetailModal({
 }) {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<string | null>(null);
+
+  const installments = client.paymentInstallments;
+  const paidInstallments = installments.filter((i) => i.paid);
+  const paidTotal = paidInstallments.reduce(
+    (sum, i) => sum + (Number(i.value) || 0),
+    0,
+  );
+  const pendingTotal = installments.reduce(
+    (sum, i) => (i.paid ? sum : sum + (Number(i.value) || 0)),
+    0,
+  );
 
   async function handleGenerate(id: string) {
     setError(null);
+    setSuccess(null);
     setBusyId(id);
     try {
       await generateDocument(id, client);
+      const template = DOCUMENT_TEMPLATES.find((t) => t.id === id);
+      setSuccess(`"${template?.label ?? 'Documento'}" gerado com sucesso.`);
     } catch (err) {
       console.error(err);
       setError('Não foi possível gerar o documento. Verifique se o modelo existe.');
@@ -44,7 +59,7 @@ export function ClientDetailModal({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="max-h-[88vh] w-full max-w-[560px] overflow-y-auto rounded-2xl border border-edge bg-bg2 p-5">
+      <div className="max-h-[88vh] w-full max-w-[560px] overflow-y-auto rounded-2xl border border-edge bg-bg2 p-4 sm:p-5">
         <div className="mb-4 flex items-start justify-between gap-3">
           <div>
             <h3 className="m-0 text-base font-bold">{client.name}</h3>
@@ -93,6 +108,54 @@ export function ClientDetailModal({
           )}
         </div>
 
+        {installments.length > 0 && (
+          <div className="mb-5 rounded-[10px] border border-edge bg-card p-3 text-[12.5px]">
+            <div className="mb-2 flex flex-wrap items-center justify-between gap-2">
+              <div className="text-[11px] font-semibold uppercase tracking-[0.03em] text-muted">
+                Parcelas de pagamento
+              </div>
+              <div className="text-[11px] text-muted">
+                {paidInstallments.length}/{installments.length} pagas
+              </div>
+            </div>
+            <ul className="m-0 flex list-none flex-col gap-1.5 p-0">
+              {installments.map((inst, idx) => (
+                <li
+                  key={idx}
+                  className="flex flex-wrap items-center justify-between gap-x-2 gap-y-0.5"
+                >
+                  <span className="text-muted">
+                    {idx + 1}ª parcela
+                    {inst.date ? ` · ${parseDateParts(inst.date).br}` : ''}
+                  </span>
+                  <span className="flex items-center gap-2">
+                    <span>{fmtBRL(inst.value)}</span>
+                    <span
+                      className={`rounded-full border px-1.5 py-[1px] text-[10px] ${
+                        inst.paid
+                          ? 'border-ok/40 text-ok'
+                          : 'border-warn/30 text-warn'
+                      }`}
+                    >
+                      {inst.paid ? 'Paga' : 'Pendente'}
+                    </span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 border-t border-edge pt-2 text-[11px]">
+              <span className="text-muted">
+                Recebido em parcelas:{' '}
+                <strong className="text-ok">{fmtBRL(paidTotal)}</strong>
+              </span>
+              <span className="text-muted">
+                Pendente em parcelas:{' '}
+                <strong className="text-warn">{fmtBRL(pendingTotal)}</strong>
+              </span>
+            </div>
+          </div>
+        )}
+
         <div className="mb-3">
           <h4 className="m-0 text-[15px] font-bold">Gerar documentos</h4>
           <p className="mt-1 text-xs text-muted">
@@ -102,16 +165,37 @@ export function ClientDetailModal({
 
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
           {DOCUMENT_TEMPLATES.map((t) => (
-            <Button
+            <div
               key={t.id}
-              variant="ghost"
-              onClick={() => handleGenerate(t.id)}
-              disabled={busyId !== null}
+              className="flex min-w-0 flex-col rounded-[10px] border border-edge bg-card p-2.5"
             >
-              {busyId === t.id ? 'Gerando…' : t.label}
-            </Button>
+              <div className="mb-1 flex items-start justify-between gap-2">
+                <span className="text-[12.5px] font-semibold text-text">
+                  {t.label}
+                </span>
+                <span className="shrink-0 rounded-full border border-edge px-1.5 py-[1px] text-[10px] text-muted">
+                  {t.kind === 'client' ? 'Cliente' : 'Interno'}
+                </span>
+              </div>
+              <p className="mb-2 text-[11px] leading-snug text-muted">
+                {t.description}
+              </p>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="mt-auto w-full justify-center"
+                onClick={() => handleGenerate(t.id)}
+                disabled={busyId !== null}
+              >
+                {busyId === t.id ? 'Gerando…' : 'Gerar'}
+              </Button>
+            </div>
           ))}
         </div>
+        <p className="mt-2 text-[11px] text-muted">
+          Todos os documentos acima são entregáveis ao cliente. Arquivos internos de
+          referência não são gerados aqui.
+        </p>
 
         {client.documentLogs.length > 0 && (
           <div className="mt-4 border-t border-edge pt-3">
@@ -126,6 +210,12 @@ export function ClientDetailModal({
                   </li>
                 ))}
             </ul>
+          </div>
+        )}
+
+        {success && (
+          <div className="mt-3 rounded-lg border border-ok/40 bg-ok/10 px-3 py-2 text-xs text-ok">
+            {success}
           </div>
         )}
 

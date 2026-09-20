@@ -10,7 +10,7 @@ import {
   type DocumentData,
 } from 'firebase/firestore';
 import { CLIENTS_COLLECTION, db } from '../firebase';
-import { PAYMENT_PROVIDERS } from '../constants';
+import { PAYMENT_PROVIDERS, normalizeProjectType } from '../constants';
 import type { Client, ClientInput, PaymentProvider } from '../types';
 
 function normalize(data: DocumentData, id: string): Client {
@@ -23,7 +23,7 @@ function normalize(data: DocumentData, id: string): Client {
     whatsapp: String(data.whatsapp ?? ''),
     email: String(data.email ?? ''),
     address: String(data.address ?? ''),
-    projectType: String(data.projectType ?? ''),
+    projectType: normalizeProjectType(String(data.projectType ?? '')),
     pipelineStage: String(data.pipelineStage ?? 'lead'),
     domain: String(data.domain ?? ''),
     hosting: String(data.hosting ?? ''),

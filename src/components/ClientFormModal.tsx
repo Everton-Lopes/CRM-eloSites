@@ -89,7 +89,7 @@ function Field({
   full?: boolean;
 }) {
   return (
-    <div className={full ? 'sm:col-span-2' : ''}>
+    <div className={`min-w-0 ${full ? 'sm:col-span-2' : ''}`}>
       <label className={labelClass}>{label}</label>
       {children}
     </div>
@@ -178,7 +178,7 @@ export function ClientFormModal({
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="max-h-[88vh] w-full max-w-[560px] overflow-y-auto rounded-2xl border border-edge bg-bg2 p-5">
+      <div className="max-h-[88vh] w-full max-w-[560px] overflow-y-auto rounded-2xl border border-edge bg-bg2 p-4 sm:p-5">
         <h3 className="mb-3.5 text-base font-bold">
           {client ? 'Editar cliente' : 'Novo cliente'}
         </h3>
@@ -441,31 +441,58 @@ export function ClientFormModal({
                     Nenhuma parcela definida. Adicione quantas precisar (data e valor).
                   </p>
                 ) : (
-                  <div className="mb-2 flex flex-col gap-2">
+                  <div className="mb-3 flex flex-col gap-2.5">
                     {form.paymentInstallments.map((inst, idx) => (
-                      <div key={idx} className="flex items-center gap-2">
-                        <input
-                          type="date"
-                          className={inputClass}
-                          value={inst.date}
-                          onChange={(e) =>
-                            updateInstallment(idx, { date: e.target.value })
-                          }
-                        />
-                        <input
-                          type="number"
-                          step="0.01"
-                          placeholder="Valor (R$)"
-                          className={inputClass}
-                          value={inst.value ?? ''}
-                          onChange={(e) =>
-                            updateInstallment(idx, {
-                              value:
-                                e.target.value === '' ? null : Number(e.target.value),
-                            })
-                          }
-                        />
-                        <label className="flex shrink-0 cursor-pointer items-center gap-1.5 whitespace-nowrap text-[12px] text-text">
+                      <div
+                        key={idx}
+                        className="rounded-[10px] border border-edge bg-bg2 p-2.5"
+                      >
+                        <div className="mb-2 flex items-center justify-between gap-2">
+                          <span className="text-[11px] font-semibold uppercase tracking-[0.03em] text-muted">
+                            Parcela {idx + 1}
+                          </span>
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => removeInstallment(idx)}
+                          >
+                            Remover
+                          </Button>
+                        </div>
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                          <label className="block min-w-0">
+                            <span className="mb-1 block text-[11px] text-muted">
+                              Data
+                            </span>
+                            <input
+                              type="date"
+                              className={`${inputClass} w-full`}
+                              value={inst.date}
+                              onChange={(e) =>
+                                updateInstallment(idx, { date: e.target.value })
+                              }
+                            />
+                          </label>
+                          <label className="block min-w-0">
+                            <span className="mb-1 block text-[11px] text-muted">
+                              Valor (R$)
+                            </span>
+                            <input
+                              type="number"
+                              step="0.01"
+                              placeholder="0,00"
+                              className={`${inputClass} w-full`}
+                              value={inst.value ?? ''}
+                              onChange={(e) =>
+                                updateInstallment(idx, {
+                                  value:
+                                    e.target.value === '' ? null : Number(e.target.value),
+                                })
+                              }
+                            />
+                          </label>
+                        </div>
+                        <label className="mt-2 flex cursor-pointer items-center gap-2 text-[12.5px] text-text">
                           <input
                             type="checkbox"
                             checked={inst.paid}
@@ -473,15 +500,8 @@ export function ClientFormModal({
                               updateInstallment(idx, { paid: e.target.checked })
                             }
                           />
-                          Pago
+                          {inst.paid ? 'Parcela paga' : 'Parcela pendente'}
                         </label>
-                        <Button
-                          variant="danger"
-                          size="sm"
-                          onClick={() => removeInstallment(idx)}
-                        >
-                          Remover
-                        </Button>
                       </div>
                     ))}
                   </div>

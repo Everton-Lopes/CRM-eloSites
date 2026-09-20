@@ -2,7 +2,13 @@ import Docxtemplater from 'docxtemplater';
 import PizZip from 'pizzip';
 import { arrayUnion, doc, updateDoc } from 'firebase/firestore';
 import { CLIENTS_COLLECTION, db } from '../firebase';
-import { DOCUMENT_TEMPLATES, LANDING_CATALOG, SITE_CATALOG } from '../constants';
+import {
+  CUSTOM_PROJECT_TYPE,
+  DOCUMENT_TEMPLATES,
+  LANDING_CATALOG,
+  LEGACY_PROJECT_TYPE,
+  SITE_CATALOG,
+} from '../constants';
 import type { Client, DocumentLogEntry, Installment } from '../types';
 import { valorPorExtenso } from './extenso';
 import { flag, parseDateParts, todayParts } from './format';
@@ -31,6 +37,7 @@ function formatInstallments(list: Installment[]): string {
       const parts: string[] = [];
       if (inst.value !== null && inst.value !== undefined) parts.push(`R$ ${money(inst.value)}`);
       if (inst.date) parts.push(`em ${parseDateParts(inst.date).br}`);
+      parts.push(inst.paid ? 'pago' : 'pendente');
       return `${idx + 1}ª parcela: ${parts.join(' ')}`;
     })
     .join('; ');
@@ -48,6 +55,9 @@ export function buildContext(client: Client) {
   const today = todayParts();
   const isLanding = client.projectType === 'Landing page';
   const isSite = client.projectType === 'Site institucional';
+  const isCustom =
+    client.projectType === CUSTOM_PROJECT_TYPE ||
+    client.projectType === LEGACY_PROJECT_TYPE;
   const budget = client.budget;
   const maintenanceStandard = budget ? budget * 0.2 : null;
 
@@ -85,7 +95,8 @@ export function buildContext(client: Client) {
 
     landingMark: flag(isLanding),
     siteMark: flag(isSite),
-    otherType: '',
+    otherMark: flag(isCustom),
+    otherType: isCustom ? CUSTOM_PROJECT_TYPE : '',
     maintenanceYes: flag(client.maintenance),
     maintenanceNo: flag(!client.maintenance),
     pixMark: flag(/pix/i.test(client.paymentMethod)),

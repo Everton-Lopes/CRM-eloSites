@@ -1,6 +1,26 @@
-import { fmtBRL } from '../lib/format';
-import type { Client } from '../types';
+import { fmtBRL, parseDateParts } from '../lib/format';
+import type { Client, Installment } from '../types';
 import { EmptyState, Kpi, SectionTitle } from './ui';
+
+function InstallmentsCell({ installments }: { installments: Installment[] }) {
+  if (!installments || installments.length === 0) {
+    return <span className="text-muted">—</span>;
+  }
+  return (
+    <ul className="m-0 flex list-none flex-col gap-1 p-0 text-[11.5px] leading-snug">
+      {installments.map((inst, idx) => (
+        <li key={idx} className="whitespace-nowrap">
+          <span className="text-muted">{idx + 1}ª</span>{' '}
+          {inst.date ? parseDateParts(inst.date).br : 'sem data'} ·{' '}
+          {fmtBRL(inst.value)} ·{' '}
+          <span className={inst.paid ? 'text-ok' : 'text-warn'}>
+            {inst.paid ? 'Paga' : 'Pendente'}
+          </span>
+        </li>
+      ))}
+    </ul>
+  );
+}
 
 export function Financeiro({ clients }: { clients: Client[] }) {
   const totalBudget = clients.reduce((s, c) => s + (Number(c.budget) || 0), 0);
@@ -26,7 +46,7 @@ export function Financeiro({ clients }: { clients: Client[] }) {
           adicionar o primeiro.
         </EmptyState>
       ) : (
-        <div className="overflow-x-auto rounded-[14px] border border-edge bg-card">
+        <div className="max-w-full overflow-x-auto rounded-[14px] border border-edge bg-card">
           <table className="w-full min-w-[760px] border-collapse text-[13px]">
             <thead>
               <tr>
@@ -39,6 +59,7 @@ export function Financeiro({ clients }: { clients: Client[] }) {
                 <th className={th}>Processador</th>
                 <th className={th}>Pagamento</th>
                 <th className={th}>Status</th>
+                <th className={th}>Parcelas</th>
               </tr>
             </thead>
             <tbody>
@@ -66,6 +87,9 @@ export function Financeiro({ clients }: { clients: Client[] }) {
                     <td className={td}>{c.paymentProvider || '—'}</td>
                     <td className={td}>{c.paymentMethod || '—'}</td>
                     <td className={td}>{c.paymentStatus || '—'}</td>
+                    <td className={td}>
+                      <InstallmentsCell installments={c.paymentInstallments} />
+                    </td>
                   </tr>
                 );
               })}
