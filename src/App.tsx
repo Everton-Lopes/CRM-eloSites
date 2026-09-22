@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { useAuth } from './hooks/useAuth';
 import { useClients } from './hooks/useClients';
 import { useSyncStatus } from './hooks/useSyncStatus';
-import type { Client, ClientInput } from './types';
+import type { Client, ClientInput, DocumentLogEntry } from './types';
 import { Header } from './components/Header';
 import { Tabs, type TabId } from './components/Tabs';
 import { Dashboard } from './components/Dashboard';
@@ -60,6 +60,24 @@ function CrmApp({
     } catch (err) {
       console.error(err);
       alert('Não foi possível excluir agora.');
+    }
+  }
+
+  async function handleDeleteDocumentLog(client: Client, log: DocumentLogEntry) {
+    if (
+      !confirm(
+        `Excluir "${log.templateLabel}" do histórico de documentos deste cliente? Essa ação não pode ser desfeita.`,
+      )
+    )
+      return;
+    try {
+      const documentLogs = client.documentLogs.filter(
+        (l) => !(l.templateId === log.templateId && l.generatedAt === log.generatedAt),
+      );
+      await updateClient(client.id, { documentLogs });
+    } catch (err) {
+      console.error(err);
+      alert('Não foi possível excluir o documento agora.');
     }
   }
 
@@ -136,7 +154,11 @@ function CrmApp({
       )}
 
       {detailClient && (
-        <ClientDetailModal client={detailClient} onClose={() => setDetailId(null)} />
+        <ClientDetailModal
+          client={detailClient}
+          onClose={() => setDetailId(null)}
+          onDeleteDocumentLog={(log) => handleDeleteDocumentLog(detailClient, log)}
+        />
       )}
     </div>
   );

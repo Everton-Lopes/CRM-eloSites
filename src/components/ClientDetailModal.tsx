@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { DOCUMENT_TEMPLATES } from '../constants';
 import { generateDocument } from '../lib/documents';
 import { fmtBRL, parseDateParts, stageLabel } from '../lib/format';
-import type { Client } from '../types';
+import type { Client, DocumentLogEntry } from '../types';
 import { Button, StageBadge } from './ui';
 
 function fmtLogDate(ts: number): string {
@@ -17,9 +17,11 @@ function fmtLogDate(ts: number): string {
 export function ClientDetailModal({
   client,
   onClose,
+  onDeleteDocumentLog,
 }: {
   client: Client;
   onClose: () => void;
+  onDeleteDocumentLog: (log: DocumentLogEntry) => Promise<void> | void;
 }) {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -200,13 +202,25 @@ export function ClientDetailModal({
         {client.documentLogs.length > 0 && (
           <div className="mt-4 border-t border-edge pt-3">
             <h4 className="m-0 text-[13px] font-bold">Documentos gerados</h4>
-            <ul className="mt-2 flex list-none flex-col gap-1 p-0 text-xs text-muted">
+            <ul className="mt-2 flex list-none flex-col gap-1.5 p-0 text-xs text-muted">
               {[...client.documentLogs]
                 .sort((a, b) => b.generatedAt - a.generatedAt)
                 .map((log, idx) => (
-                  <li key={`${log.templateId}-${log.generatedAt}-${idx}`}>
-                    <strong className="text-text">{log.templateLabel}</strong> gerado em{' '}
-                    {fmtLogDate(log.generatedAt)}
+                  <li
+                    key={`${log.templateId}-${log.generatedAt}-${idx}`}
+                    className="flex flex-wrap items-center justify-between gap-2"
+                  >
+                    <span>
+                      <strong className="text-text">{log.templateLabel}</strong> gerado em{' '}
+                      {fmtLogDate(log.generatedAt)}
+                    </span>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => onDeleteDocumentLog(log)}
+                    >
+                      Excluir
+                    </Button>
                   </li>
                 ))}
             </ul>

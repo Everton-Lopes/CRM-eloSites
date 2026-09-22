@@ -1,5 +1,11 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
-import { PROJECT_TYPES, PAYMENT_PROVIDERS, STAGES, catalogFor } from '../constants';
+import {
+  PROJECT_TYPES,
+  PAYMENT_PROVIDERS,
+  STAGES,
+  CUSTOM_PROJECT_TYPE,
+  catalogFor,
+} from '../constants';
 import type {
   Client,
   ClientInput,
@@ -110,8 +116,13 @@ export function ClientFormModal({
   );
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [extraItemText, setExtraItemText] = useState('');
 
   const catalog = catalogFor(form.projectType);
+  const isCustomType = form.projectType === CUSTOM_PROJECT_TYPE;
+  // Anything in scopeItems that isn't part of the standard catalog was typed
+  // in manually as an "item extra" — no separate field needed to track it.
+  const extraItems = form.scopeItems.filter((item) => !catalog.includes(item));
 
   function set<K extends keyof ClientInput>(key: K, value: ClientInput[K]) {
     setForm((f) => ({ ...f, [key]: value }));
@@ -134,6 +145,19 @@ export function ClientFormModal({
         ? f.scopeItems.filter((x) => x !== item)
         : [...f.scopeItems, item],
     }));
+  }
+
+  function addExtraItem() {
+    const value = extraItemText.trim();
+    if (!value) return;
+    setForm((f) =>
+      f.scopeItems.includes(value) ? f : { ...f, scopeItems: [...f.scopeItems, value] },
+    );
+    setExtraItemText('');
+  }
+
+  function removeExtraItem(item: string) {
+    setForm((f) => ({ ...f, scopeItems: f.scopeItems.filter((x) => x !== item) }));
   }
 
   function addInstallment() {
@@ -522,7 +546,14 @@ export function ClientFormModal({
               </div>
             </Field>
 
-            <Field label="Escopo incluído (catálogo do tipo de projeto)" full>
+            <Field
+              label={
+                isCustomType
+                  ? 'Escopo incluído (itens da Landing Page + Site Institucional)'
+                  : 'Escopo incluído (catálogo do tipo de projeto)'
+              }
+              full
+            >
               {catalog.length === 0 ? (
                 <p className="rounded-[10px] border border-edge bg-card px-3 py-2 text-xs text-muted">
                   Nenhum catálogo padrão para este tipo de projeto. Use as observações
@@ -544,6 +575,63 @@ export function ClientFormModal({
                       <span>{item}</span>
                     </label>
                   ))}
+                </div>
+              )}
+
+              {isCustomType && (
+                <div className="mt-2.5 rounded-[10px] border border-edge bg-card p-3">
+                  <div className="mb-1.5 text-[11px] font-semibold uppercase tracking-[0.03em] text-muted">
+                    Itens extras deste cliente
+                  </div>
+                  {extraItems.length > 0 && (
+                    <ul className="mb-2.5 flex list-none flex-col gap-1.5 p-0">
+                      {extraItems.map((item) => (
+                        <li
+                          key={item}
+                          className="flex items-start justify-between gap-2 text-[12.5px] text-text"
+                        >
+                          <span className="flex items-start gap-2">
+                            <span className="mt-0.5 text-brand-light">✓</span>
+                            <span>{item}</span>
+                          </span>
+                          <Button
+                            variant="danger"
+                            size="sm"
+                            onClick={() => removeExtraItem(item)}
+                          >
+                            Remover
+                          </Button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <input
+                      className={`${inputClass} flex-1`}
+                      placeholder="Descreva o entregável extra pedido pelo cliente…"
+                      value={extraItemText}
+                      onChange={(e) => setExtraItemText(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          addExtraItem();
+                        }
+                      }}
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={addExtraItem}
+                      disabled={!extraItemText.trim()}
+                    >
+                      + Adicionar item extra
+                    </Button>
+                  </div>
+                  <p className="mt-1.5 text-[11px] text-muted">
+                    Itens extras entram marcados automaticamente e são salvos junto ao
+                    escopo do cliente para constar nos documentos gerados.
+                  </p>
                 </div>
               )}
             </Field>

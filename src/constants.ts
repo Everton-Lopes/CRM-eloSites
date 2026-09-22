@@ -61,9 +61,19 @@ export const SITE_CATALOG: string[] = [
   'Configuração e conexão técnica de domínio e hospedagem contratados diretamente pelo cliente, quando previstos no escopo',
 ];
 
+// Projeto Personalizado has no catalog of its own: it offers every item from
+// both standard catalogs (deduplicated) as a starting checklist, since a
+// custom project can combine landing-page and institutional-site items.
+export const CUSTOM_CATALOG: string[] = Array.from(
+  new Set([...LANDING_CATALOG, ...SITE_CATALOG]),
+);
+
 export function catalogFor(projectType: string): string[] {
   if (projectType === 'Landing page') return LANDING_CATALOG;
   if (projectType === 'Site institucional') return SITE_CATALOG;
+  if (projectType === CUSTOM_PROJECT_TYPE || projectType === LEGACY_PROJECT_TYPE) {
+    return CUSTOM_CATALOG;
+  }
   return [];
 }
 

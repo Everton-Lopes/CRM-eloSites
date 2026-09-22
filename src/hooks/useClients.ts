@@ -114,12 +114,21 @@ export function useClients(enabled: boolean) {
     });
   }, []);
 
-  const updateClient = useCallback(async (id: string, input: Partial<ClientInput>) => {
-    await updateDoc(doc(db, CLIENTS_COLLECTION, id), {
-      ...input,
-      updatedAt: Date.now(),
-    });
-  }, []);
+  const updateClient = useCallback(
+    async (
+      id: string,
+      // Wider than ClientInput on purpose: ClientInput excludes documentLogs
+      // (managed by document generation/deletion, not the edit form), but
+      // this hook is also how those log entries get persisted.
+      input: Partial<Omit<Client, 'id' | 'createdAt' | 'updatedAt'>>,
+    ) => {
+      await updateDoc(doc(db, CLIENTS_COLLECTION, id), {
+        ...input,
+        updatedAt: Date.now(),
+      });
+    },
+    [],
+  );
 
   const removeClient = useCallback(async (id: string) => {
     await deleteDoc(doc(db, CLIENTS_COLLECTION, id));

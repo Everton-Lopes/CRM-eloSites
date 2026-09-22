@@ -59,6 +59,19 @@ function catalogRows(catalog: string[], selected: string[], active: boolean) {
   }));
 }
 
+// Scope items typed manually via "item extra" (Projeto Personalizado) live in
+// the same flat scopeItems list as catalog items — anything not found in
+// either standard catalog is, by definition, a client-specific extra. These
+// feed the existing "Itens adicionais" table in the orçamento template.
+function extraScopeItems(client: Client): string[] {
+  const known = new Set([
+    ...LANDING_CATALOG,
+    ...SITE_CATALOG,
+    ...Object.keys(LEGACY_SCOPE_LABELS),
+  ]);
+  return client.scopeItems.filter((item) => !known.has(item));
+}
+
 export function buildContext(client: Client) {
   const today = todayParts();
   const isLanding = client.projectType === 'Landing page';
@@ -130,9 +143,17 @@ export function buildContext(client: Client) {
     maintenanceDueDay: '',
 
     scopeItems: client.scopeItems,
-    landingCatalog: catalogRows(LANDING_CATALOG, client.scopeItems, isLanding),
-    siteCatalog: catalogRows(SITE_CATALOG, client.scopeItems, isSite),
-    additionalItems: [{ item: '', description: '' }],
+    // Projeto Personalizado draws its checklist from both standard catalogs
+    // (see CUSTOM_CATALOG), so marks must reflect the selection there too —
+    // not just for the matching Landing/Site project type.
+    landingCatalog: catalogRows(LANDING_CATALOG, client.scopeItems, isLanding || isCustom),
+    siteCatalog: catalogRows(SITE_CATALOG, client.scopeItems, isSite || isCustom),
+    additionalItems: (() => {
+      const extras = extraScopeItems(client);
+      return extras.length > 0
+        ? extras.map((item) => ({ item, description: '' }))
+        : [{ item: '', description: '' }];
+    })(),
   };
 }
 
