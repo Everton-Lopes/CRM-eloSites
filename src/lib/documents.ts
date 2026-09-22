@@ -127,7 +127,6 @@ export function buildContext(client: Client) {
     reviewRounds: '3',
     noticeDays: '15',
     cureDays: '15',
-    jurisdiction: '',
     maintenanceDueDay: '',
 
     scopeItems: client.scopeItems,
