@@ -197,6 +197,12 @@ export async function generateDocument(templateId: string, client: Client): Prom
 
   const out = docx.getZip().generate({
     type: 'blob',
+    // pizzip defaults to no compression (STORE) when this is omitted, which
+    // both bloats the file (5x+ observed) and — per docxtemplater's own
+    // guidance — is the configuration known to cause "problemas com o
+    // conteúdo" errors in some Word installations. DEFLATE matches how Word
+    // itself saves .docx files.
+    compression: 'DEFLATE',
     mimeType:
       'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
   }) as Blob;
