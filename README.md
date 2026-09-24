@@ -20,8 +20,8 @@ Nunca faça commit do `.env`. Só o `.env.example` (com valores de exemplo) vai 
 
 A chave do Firebase que vai para o navegador **não é segredo**. Quem protege os dados são as **regras do Firestore** e a **autenticação**:
 
-1. Em Firebase Console > Authentication > Users, copie o seu **User UID**.
-2. Abra `firestore.rules`, troque `COLE_SEU_UID_AQUI` pelo UID e publique o conteúdo em Firebase Console > Firestore Database > Rules (ou use a Firebase CLI, se preferir).
+1. O **User UID** do proprietário está em Firebase Console > Authentication > Users.
+2. `firestore.rules` já contém esse UID e espelha as regras publicadas em Firebase Console > Firestore Database > Rules. Ao alterar o arquivo, publique o conteúdo também no console (ou use a Firebase CLI).
 3. Em Authentication > Settings (User actions), **desative o cadastro de novos usuários** ("Enable create (sign-up)"), se essa opção estiver disponível na sua conta. Sem isso, qualquer pessoa com a chave pública pode criar uma conta. A regra por UID protege os dados mesmo assim, mas desativar o cadastro reduz a superfície.
 4. Teste: sem estar logado, uma leitura da coleção `clients` deve ser negada (use o "Rules Playground" do console).
 
