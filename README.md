@@ -1,0 +1,58 @@
+# ēloSites CRM
+
+CRM interno da ēloSites (uso pessoal, um único usuário): clientes, financeiro, pipeline e geração de documentos `.docx`.
+
+**Stack:** React 18 + TypeScript + Vite + Tailwind, Firebase (Auth + Firestore com cache offline), docxtemplater/pizzip (documentos) e exceljs (planilha).
+
+## Como executar
+
+```bash
+npm install
+cp .env.example .env    # preencha com os valores do SEU projeto Firebase
+npm run dev             # http://localhost:5173
+```
+
+Scripts: `npm run lint` (checagem de tipos) · `npm run build` (tipos + build de produção) · `npm run preview`.
+
+Nunca faça commit do `.env`. Só o `.env.example` (com valores de exemplo) vai para o repositório.
+
+## Segurança do Firestore (obrigatório)
+
+A chave do Firebase que vai para o navegador **não é segredo**. Quem protege os dados são as **regras do Firestore** e a **autenticação**:
+
+1. Em Firebase Console > Authentication > Users, copie o seu **User UID**.
+2. Abra `firestore.rules`, troque `COLE_SEU_UID_AQUI` pelo UID e publique o conteúdo em Firebase Console > Firestore Database > Rules (ou use a Firebase CLI, se preferir).
+3. Em Authentication > Settings (User actions), **desative o cadastro de novos usuários** ("Enable create (sign-up)"), se essa opção estiver disponível na sua conta. Sem isso, qualquer pessoa com a chave pública pode criar uma conta. A regra por UID protege os dados mesmo assim, mas desativar o cadastro reduz a superfície.
+4. Teste: sem estar logado, uma leitura da coleção `clients` deve ser negada (use o "Rules Playground" do console).
+
+Se as regras forem alteradas, repita o teste do item 4.
+
+## Documentos (.docx)
+
+- **Fonte oficial dos modelos:** `public/templates/`. É de lá que o CRM lê e preenche os arquivos.
+- A pasta `templates/` (raiz) **não é usada** pelo CRM e pode conter versões anteriores. Em caso de divergência, vale `public/templates/`.
+- Os modelos usam tags do docxtemplater, como `{clientName}`. Ao editar um modelo, preserve as tags. Uma tag quebrada no meio faz o documento falhar. Alterações de redação jurídica devem ser validadas por advogado.
+- As variáveis são montadas em `src/lib/documents.ts` (`buildContext`).
+
+Valores padrão definidos no código (alteráveis em `buildContext`):
+
+| Variável | Valor | Uso |
+|---|---|---|
+| `noticeDays` | 30 | Aviso prévio de cancelamento da manutenção |
+| `cureDays` | 30 | Prazo para sanar descumprimento antes da rescisão |
+| `reviewRounds` | 3 | Rodadas de revisão no orçamento |
+| `maintenanceDueDay` | dia de `maintenanceStartDate` | Vencimento mensal da manutenção |
+
+Observações:
+
+- O **número do orçamento** (`ORC-AAAAMMDD-XXXX`) é gerado na primeira geração de documento do cliente e gravado no cadastro; não muda depois.
+- Os documentos mostram apenas o **cronograma de parcelas** (valor e data). O status pago/pendente fica somente no CRM.
+- Se a manutenção começar nos dias 29, 30 ou 31, o vencimento "todo dia N" não existe em todos os meses. Prefira um início entre os dias 1 e 28.
+
+## Aviso sobre arquivos públicos
+
+Tudo em `public/` é servido como arquivo estático quando o CRM está publicado, inclusive `public/templates/*.docx`. Esses modelos contêm dados do contratado (nome, CPF, endereço, contatos). Como o CRM é de uso exclusivo do proprietário, esse risco foi aceito. Se a URL do CRM for compartilhada com terceiros, reavalie: proteja o acesso no host ou retire esses dados dos modelos.
+
+## Publicação (Netlify)
+
+Comando de build: `npm run build` · Diretório de publicação: `dist`. Configure as variáveis `VITE_FIREBASE_*` no painel do Netlify (Site settings > Environment variables), com os mesmos nomes do `.env.example`.

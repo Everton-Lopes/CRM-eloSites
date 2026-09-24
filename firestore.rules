@@ -1,0 +1,26 @@
+rules_version = '2';
+
+// Regras do Firestore do CRM ēloSites.
+// Somente o UID do proprietário pode ler ou escrever. Todo o resto é negado.
+//
+// ANTES DE PUBLICAR: troque COLE_SEU_UID_AQUI pelo seu "User UID"
+// (Firebase Console > Authentication > Users). Enquanto o texto não for
+// trocado, TODO acesso é negado (falha segura) e o CRM não carrega os dados.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner() {
+      return request.auth != null
+        && request.auth.uid == 'COLE_SEU_UID_AQUI';
+    }
+
+    match /clients/{clientId} {
+      allow read, write: if isOwner();
+    }
+
+    // Qualquer outra coleção: acesso negado.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
